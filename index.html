@@ -12,6 +12,7 @@
   <div class="wrap">
     <p class="kicker">2026 U.S. House and Senate forecast</p>
     <h1 id="title">My 2026 Midterm Forecast</h1>
+    <p id="countdown" class="note" hidden></p>
     <p id="tagline" class="tagline" hidden></p>
     <p id="asof" class="asof"></p>
   </div>
@@ -92,5 +93,43 @@
 <script src="config.js"></script>
 <script src="assets/core.js"></script>
 <script src="assets/app.js"></script>
+<script>
+(function () {
+  var el = document.getElementById('countdown');
+  if (!el) return;
+
+  // First polls close: Tuesday, November 3, 2026 at 6:00 pm Eastern.
+  // Daylight time ends on November 1, so Eastern is UTC-5 that day: 23:00 UTC.
+  // Using a fixed UTC instant keeps the countdown correct in any visitor's time zone.
+  var TARGET = Date.UTC(2026, 10, 3, 23, 0, 0);
+
+  function plural(n, word) {
+    return n + ' ' + word + (n === 1 ? '' : 's');
+  }
+
+  function render() {
+    var ms = TARGET - Date.now();
+    var text;
+    if (ms <= 0) {
+      text = 'Results are coming in';
+    } else {
+      var days = Math.floor(ms / 86400000);
+      var hours = Math.floor((ms % 86400000) / 3600000);
+      if (days === 0 && hours === 0) {
+        text = 'First polls close in less than 1 hour';
+      } else if (days === 0) {
+        text = 'First polls close in ' + plural(hours, 'hour');
+      } else {
+        text = 'First polls close in ' + plural(days, 'day') + ', ' + plural(hours, 'hour');
+      }
+    }
+    if (el.textContent !== text) el.textContent = text;
+    el.hidden = false;
+  }
+
+  render();
+  setInterval(render, 30000);
+})();
+</script>
 </body>
 </html>
