@@ -19,7 +19,8 @@
   /* ------------------------------------------------------------------ feature switches */
   var OPTS = {
     viewSwitch: true,          // "Classic view" link in the nav (and a "New design" pill in classic mode)
-    compareLabels: true,       // small NEW / CURRENT tags on panels while you compare designs
+    compareLabels: false,      // small NEW / CURRENT tags on panels (off: you are keeping all the visuals)
+    hideMapNotes: true,        // hide the one-line notes under the large "House" and "Senate" titles
     flipClock: true,
     stickyNav: true,
     honeycomb: true,
@@ -37,6 +38,7 @@
 
   var root = document.documentElement;
   var IS_V2 = root.classList.contains("v2");
+  var IS_R = root.classList.contains("v2r");   // refined visual layer (add ?refined=0 to the address to turn it off)
   var $ = function (id) { return document.getElementById(id); };
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
 
@@ -372,7 +374,7 @@
      ===================================================================================== */
   var hatchN = 0;
   function layoutHemi(n, W, H, a) {
-    var cx = W / 2, cy = H - 22, R = Math.min(W / 2 - 16, H - 52);
+    var cx = W / 2, cy = IS_R ? H - 34 : H - 22, R = IS_R ? Math.min(W / 2 - 46, H - 96) : Math.min(W / 2 - 16, H - 52);
     a = a || 0.42;
     var coef = (Math.PI / 2) * (1 + a) / (1 - a);
     var k = Math.max(3, Math.round((1 + Math.sqrt(1 + 4 * n / coef)) / 2));
@@ -398,27 +400,59 @@
     return h + "<span class='key'><i class='sw r-safe-d fixed'></i>Hatched: fixed by the race file</span>" + (extra || "");
   }
   function hemicycle(opts) {
-    // opts: seats[], W, H, kicker, big (html), sub, sub2, majLabel, aria
-    var L = layoutHemi(opts.seats.length, opts.W, opts.H, opts.a), id = "hx" + (++hatchN);
+    // opts: seats[], W, H, kicker, big (html), d/r (numbers, refined lockup), sub, sub2, majLabel, aria
+    var L = layoutHemi(opts.seats.length, opts.W, opts.H, opts.a), id = "hx" + (++hatchN), n = opts.seats.length;
     var s = "<svg viewBox='0 0 " + opts.W + " " + opts.H + "' role='img' aria-label='" + esc(opts.aria) + "'>";
-    s += "<defs><pattern id='" + id + "' width='5' height='5' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'><line x1='0' y1='0' x2='0' y2='5' stroke='rgba(255,255,255,.55)' stroke-width='1.7'/></pattern></defs>";
+    s += "<defs><pattern id='" + id + "' width='5' height='5' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'><line x1='0' y1='0' x2='0' y2='5' stroke='rgba(255,255,255,.55)' stroke-width='1.7'/></pattern>";
+    if (IS_R) s += "<radialGradient id='" + id + "s' cx='34%' cy='28%' r='80%'><stop offset='0' stop-color='#fff' stop-opacity='.34'/><stop offset='.5' stop-color='#fff' stop-opacity='0'/><stop offset='1' stop-color='#000' stop-opacity='.3'/></radialGradient>";
+    s += "</defs>";
+    var cx = L.cx, cy = L.cy, gr = L.R + L.dot + 13, gi = L.inner - L.dot - 13, i, t;
+    if (IS_R) {   // guide rings, baseline and seat-number ticks behind the dots
+      s += "<g class='guides'>";
+      s += "<path class='gd' d='M" + (cx - gr).toFixed(1) + "," + cy + " A" + gr.toFixed(1) + "," + gr.toFixed(1) + " 0 0 1 " + (cx + gr).toFixed(1) + "," + cy + "'/>";
+      if (gi > 30) s += "<path class='gd' d='M" + (cx - gi).toFixed(1) + "," + cy + " A" + gi.toFixed(1) + "," + gi.toFixed(1) + " 0 0 1 " + (cx + gi).toFixed(1) + "," + cy + "'/>";
+      s += "<line class='gd' x1='" + (cx - gr).toFixed(1) + "' x2='" + (cx + gr).toFixed(1) + "' y1='" + (cy + L.dot + 12).toFixed(1) + "' y2='" + (cy + L.dot + 12).toFixed(1) + "'/>";
+      var step = n > 200 ? 100 : 25;
+      for (t = step; t < n; t += step) {
+        var pt = L.pts[t - 1], an = pt.ang, c = Math.cos(an), sn = Math.sin(an);
+        if (Math.abs(an - Math.PI / 2) < 0.14) continue;   // leave the apex to the majority label
+        s += "<line class='gd tk' x1='" + (cx + gr * c).toFixed(1) + "' y1='" + (cy - gr * sn).toFixed(1) + "' x2='" + (cx + (gr + 7) * c).toFixed(1) + "' y2='" + (cy - (gr + 7) * sn).toFixed(1) + "'/>";
+        s += "<text class='tklab' x='" + (cx + (gr + 13) * c).toFixed(1) + "' y='" + (cy - (gr + 13) * sn + 3).toFixed(1) + "' text-anchor='" + (c < -0.25 ? "end" : (c > 0.25 ? "start" : "middle")) + "'>" + t + "</text>";
+      }
+      s += "<text class='tklab' x='" + (cx - gr - 6).toFixed(1) + "' y='" + (cy + L.dot + 27) + "' text-anchor='middle'>Most Democratic</text>";
+      s += "<text class='tklab' x='" + (cx + gr + 6).toFixed(1) + "' y='" + (cy + L.dot + 27) + "' text-anchor='middle'>Most Republican</text>";
+      s += "</g>";
+    }
     opts.seats.forEach(function (seat, i) {
-      var p = L.pts[i], cls, extra = "";
+      var p = L.pts[i], cls;
       if (seat.hold) cls = "d hold " + (seat.hold === "d" ? "f-safe-d" : "f-safe-r");
       else { cls = "d f-" + (seat.r.rating ? seat.r.rating.key : "toss"); }
       s += "<circle class='" + cls + "' data-i='" + i + "' cx='" + p.x.toFixed(1) + "' cy='" + p.y.toFixed(1) + "' r='" + L.dot.toFixed(2) + "'/>";
+      if (IS_R && !seat.hold) s += "<circle class='sh' cx='" + p.x.toFixed(1) + "' cy='" + p.y.toFixed(1) + "' r='" + L.dot.toFixed(2) + "' fill='url(#" + id + "s)' pointer-events='none'/>";
       if (seat.r && isFixed(seat.r)) s += "<circle cx='" + p.x.toFixed(1) + "' cy='" + p.y.toFixed(1) + "' r='" + L.dot.toFixed(2) + "' fill='url(#" + id + ")' pointer-events='none'/>";
     });
-    var top = L.cy - L.R - L.dot - 6;
-    s += "<line class='maj' x1='" + L.cx + "' x2='" + L.cx + "' y1='" + (top + 6) + "' y2='" + (L.cy - L.inner + L.dot * 0.4).toFixed(1) + "'/>";
-    s += "<text class='majlab' x='" + L.cx + "' y='" + (top - 4) + "' text-anchor='middle'>" + esc(opts.majLabel) + "</text>";
-    var by = L.cy - L.inner * 0.30;
-    s += "<text class='hc-kick' x='" + L.cx + "' y='" + (L.cy - L.inner * 0.74).toFixed(1) + "' text-anchor='middle'>" + esc(opts.kicker) + "</text>";
-    s += "<text class='hc-big' x='" + L.cx + "' y='" + by.toFixed(1) + "' text-anchor='middle'>" + opts.big + "</text>";
-    s += "<text class='hc-sub' x='" + L.cx + "' y='" + (by + 24).toFixed(1) + "' text-anchor='middle'>" + esc(opts.sub) + "</text>";
-    (opts.sub2 || []).forEach(function (line, i) {
-      s += "<text class='hc-sub' x='" + L.cx + "' y='" + (by + 44 + i * 17).toFixed(1) + "' text-anchor='middle'>" + esc(line) + "</text>";
-    });
+    var top = IS_R ? cy - gr - 20 : L.cy - L.R - L.dot - 6;
+    s += "<line class='maj' x1='" + cx + "' x2='" + cx + "' y1='" + (top + 6) + "' y2='" + (cy - L.inner + L.dot * 0.4).toFixed(1) + "'/>";
+    s += "<text class='majlab' x='" + cx + "' y='" + (top - 4) + "' text-anchor='middle'>" + esc(opts.majLabel) + "</text>";
+    var by = cy - L.inner * 0.30;
+    s += "<text class='hc-kick' x='" + cx + "' y='" + (cy - L.inner * (IS_R ? 0.68 : 0.74)).toFixed(1) + "' text-anchor='middle'>" + esc(opts.kicker) + "</text>";
+    if (IS_R && opts.d != null) {
+      var off = Math.min(L.inner * 0.5, 78);
+      s += "<text class='hc-big hc-d' x='" + (cx - off).toFixed(1) + "' y='" + by.toFixed(1) + "' text-anchor='middle'>" + opts.d + "</text>";
+      s += "<text class='hc-dash' x='" + cx + "' y='" + (by - 8).toFixed(1) + "' text-anchor='middle'>&#8212;</text>";
+      s += "<text class='hc-big hc-r' x='" + (cx + off).toFixed(1) + "' y='" + by.toFixed(1) + "' text-anchor='middle'>" + opts.r + "</text>";
+      s += "<text class='hc-lab' x='" + (cx - off).toFixed(1) + "' y='" + (by + 20).toFixed(1) + "' text-anchor='middle'>DEMOCRATIC</text>";
+      s += "<text class='hc-lab' x='" + (cx + off).toFixed(1) + "' y='" + (by + 20).toFixed(1) + "' text-anchor='middle'>REPUBLICAN</text>";
+      (opts.sub2 || []).forEach(function (line, k) {
+        s += "<text class='hc-sub' x='" + cx + "' y='" + (by + 46 + k * 17).toFixed(1) + "' text-anchor='middle'>" + esc(line) + "</text>";
+      });
+    } else {
+      s += "<text class='hc-big' x='" + cx + "' y='" + by.toFixed(1) + "' text-anchor='middle'>" + opts.big + "</text>";
+      s += "<text class='hc-sub' x='" + cx + "' y='" + (by + 24).toFixed(1) + "' text-anchor='middle'>" + esc(opts.sub) + "</text>";
+      (opts.sub2 || []).forEach(function (line, k) {
+        s += "<text class='hc-sub' x='" + cx + "' y='" + (by + 44 + k * 17).toFixed(1) + "' text-anchor='middle'>" + esc(line) + "</text>";
+      });
+    }
     s += "</svg>";
     var wrap = el("div", "hemi", s);
     if (opts.cap) wrap.appendChild(el("p", "hemi-cap", esc(opts.cap)));   // shown instead of the small centre text on phones
@@ -455,7 +489,7 @@
     var st = stage("Seat chart", "New", "Each dot is one of the 435 districts, ordered from most Democratic (left) to most Republican (right). The dashed line marks the 218-seat majority.");
     st.id = "v2-house-seats";
     st.appendChild(hemicycle({
-      seats: rs.map(function (r) { return { r: r }; }), W: 820, H: 450,
+      seats: rs.map(function (r) { return { r: r }; }), W: IS_R ? 880 : 820, H: IS_R ? 500 : 450, d: hD, r: hR,
       kicker: "PROJECTED SEATS", big: "<tspan class='hc-d'>" + hD + "</tspan><tspan fill='#98a0b0'> &#8211; </tspan><tspan class='hc-r'>" + hR + "</tspan>",
       sub: "Democratic &#8211; Republican".replace(/&#8211;/, "–"), sub2: sub2, majLabel: "218 = MAJORITY", cap: "Projected: Democratic " + hD + ", Republican " + hR + (sub2.length ? ". " + sub2[0] + "." : "."),
       aria: "House seat chart. Projected Democratic " + hD + ", Republican " + hR + "."
@@ -478,7 +512,7 @@
     var st = stage("Seat chart", "New", "All 100 seats. Faded dots are the " + (M.demNotUp + M.repNotUp) + " seats not up in 2026; solid dots are the " + M.senate.length + " races on the ballot, ordered from most Democratic to most Republican.");
     st.id = "v2-senate-seats";
     st.appendChild(hemicycle({
-      seats: seats, W: 700, H: 410, a: 0.5,
+      seats: seats, W: IS_R ? 780 : 700, H: IS_R ? 470 : 410, a: 0.5, d: sD, r: sR,
       kicker: "PROJECTED SEATS", big: "<tspan class='hc-d'>" + sD + "</tspan><tspan fill='#98a0b0'> &#8211; </tspan><tspan class='hc-r'>" + sR + "</tspan>",
       sub: "Democratic – Republican", sub2: sub2, majLabel: "51 FOR DEMOCRATIC CONTROL", cap: "Projected: Democratic " + sD + ", Republican " + sR + (sub2.length ? ". " + sub2.join(" ") + "." : "."),
       aria: "Senate seat chart. Projected Democratic " + sD + ", Republican " + sR + "."
@@ -527,13 +561,15 @@
     var X = function (val) { return padL + (val - lo + 0.5) * bw; };
     var mx = padL + (maj - lo) * bw;
     var s = "<svg viewBox='0 0 " + W + " " + (padT + H + padB) + "' role='img' aria-label='" + lab + " seat distribution: Democrats win " + what + " in " + pct(pm) + " of simulations. Median " + Math.round(p50) + " seats, 80% range " + Math.round(p10) + " to " + Math.round(p90) + ".'>";
+    var gid = "hg" + (++hatchN);
+    if (IS_R) s += "<defs><linearGradient id='" + gid + "d' x1='0' y1='0' x2='0' y2='1'><stop offset='0' style='stop-color:var(--likely-d)'/><stop offset='1' style='stop-color:var(--safe-d)'/></linearGradient><linearGradient id='" + gid + "r' x1='0' y1='0' x2='0' y2='1'><stop offset='0' style='stop-color:var(--likely-r)'/><stop offset='1' style='stop-color:var(--safe-r)'/></linearGradient></defs>";
     s += "<rect class='tint-r' x='" + padL + "' y='" + padT + "' width='" + (mx - padL) + "' height='" + H + "'/><rect class='tint-d' x='" + mx + "' y='" + padT + "' width='" + (W - padR - mx) + "' height='" + H + "'/>";
     [0.25, 0.5, 0.75].forEach(function (f) { var y = padT + H - H * f; s += "<line class='gridl' x1='" + padL + "' x2='" + (W - padR) + "' y1='" + y + "' y2='" + y + "'/>"; });
     for (v = lo; v <= hi; v++) {
       var c = counts[v] || 0; if (!c) continue;
       var h = Math.max(1, (H - 4) * c / maxC), x = padL + (v - lo) * bw, y = padT + H - h;
       s += "<rect class='b' x='" + (x + gap / 2).toFixed(2) + "' y='" + y.toFixed(2) + "' width='" + Math.max(0.6, bw - gap).toFixed(2) + "' height='" + h.toFixed(2) +
-        "' rx='" + Math.min(1.8, (bw - gap) / 2).toFixed(2) + "' fill='" + (v >= maj ? "var(--likely-d)" : "var(--likely-r)") + "' data-v='" + v + "' data-c='" + c + "'/>";
+        "' rx='" + Math.min(1.8, (bw - gap) / 2).toFixed(2) + "' fill='" + (IS_R ? "url(#" + gid + (v >= maj ? "d" : "r") + ")" : (v >= maj ? "var(--likely-d)" : "var(--likely-r)")) + "' data-v='" + v + "' data-c='" + c + "'/>";
     }
     s += "<line class='base' x1='" + padL + "' x2='" + (W - padR) + "' y1='" + (padT + H) + "' y2='" + (padT + H) + "'/>";
     s += "<line class='maj' x1='" + mx + "' x2='" + mx + "' y1='" + (padT - 12) + "' y2='" + (padT + H) + "'/>";
@@ -894,6 +930,16 @@
     if (OPTS.stateDrawer) safe("drawer", buildDrawer);
     if (OPTS.honeycomb) safe("honeycomb", honeycomb);
     safe("tiles", wireTiles);
+    if (IS_R) safe("hero", function () {
+      document.querySelectorAll(".topline .hero").forEach(function (h) {
+        var m = /^\s*(\S.*?)\s+(\d+%)\s*$/.exec(h.textContent); if (!m) return;
+        var side = /^Dem/i.test(m[1]) ? "d" : (/^Rep/i.test(m[1]) ? "r" : "");
+        h.innerHTML = "<span class='hero-w'>" + esc(m[1]) + "</span> <span class='hero-p " + side + "'>" + m[2] + "</span>";
+      });
+    });
+    if (OPTS.hideMapNotes) ["House", "Senate"].forEach(function (t) {
+      var sec = sectionByTitle(t), nt = sec && sec.querySelector(".block-head .note"); if (nt) nt.classList.add("v2-gone");
+    });
     // Stage panels: wrap the CURRENT maps in a dark panel (labelled "Current") so they sit under the new seat charts.
     [["Senate", "senate-map", "legend-senate", "State map"], ["House", "house-grid", "legend-house", "District map"]].forEach(function (d) {
       safe("stage " + d[0], function () {
