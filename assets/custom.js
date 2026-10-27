@@ -1304,7 +1304,12 @@
   /* "Point forecast: D 215, R 220." -> bold, party-coloured "Democratic 215 – Republican 220" */
   function partyLine(d, r) { return "<b class='pd'>Democratic</b> " + d + " &ndash; <b class='pr'>Republican</b> " + r; }
   function styleSummaries() {
+    document.querySelectorAll(".topline .hero").forEach(function (h) {   // "D 215 – R 220" headline (shown when there are no simulations)
+      var m = /^\s*D\s+(\d+)\s*[\u2013\u2014-]\s*R\s+(\d+)\s*$/.exec(h.textContent);
+      if (m) { h.classList.add("hero-pl"); h.innerHTML = "<span class='nb'><b class='pd'>Democratic</b> " + m[1] + "</span> <span class='nb'>&ndash; <b class='pr'>Republican</b> " + m[2] + "</span>"; }
+    });
     document.querySelectorAll(".topline .sub").forEach(function (p) {
+      if (/^Projected seats:/.test(p.textContent)) { p.remove(); return; }
       var m = /^Point forecast: D (\d+), R (\d+)/.exec(p.textContent);
       if (m) { p.classList.add("party-line"); p.innerHTML = partyLine(m[1], m[2]); }
     });

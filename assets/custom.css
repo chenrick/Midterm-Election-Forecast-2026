@@ -1209,3 +1209,9 @@ html.v2l .dr-race .t1 b { font-weight: 700; }
   html.v2l body { background: #fff; background-image: none; }
   html.v2l #method-block.about-top .ab-wrap { box-shadow: none; }
 }
+/* "Democratic 215 – Republican 220" used as the big card headline */
+html.v2l .card .hero.hero-pl { font-size: clamp(28px, 3.1vw, 38px); white-space: normal; line-height: 1.15; }
+html.v2l .card .hero.hero-pl b { font-weight: 700; }
+html.v2l .card .hero.hero-pl b.pd { color: var(--safe-d); } html.v2l .card .hero.hero-pl b.pr { color: var(--safe-r); }
+@media (max-width: 420px) { html.v2l .card .hero.hero-pl { font-size: 27px; } }
+html.v2l .card .hero.hero-pl .nb { white-space: nowrap; }
