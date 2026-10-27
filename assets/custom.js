@@ -1295,6 +1295,7 @@
     var me = $("method-block"), content = $("content"), pr = $("method"); if (!me || !content || !pr || me.hidden) return;
     me.classList.add("about-top");
     var wrap = el("div", "ab-wrap");
+    wrap.appendChild(el("h2", "ab-title", "About the model"));
     var ps = pr.querySelectorAll("p");
     if (ps.length === 3) ["Inputs", "National mood", "Uncertainty"].forEach(function (t, k) { ps[k].insertAdjacentHTML("afterbegin", "<span class='ab-lab'>" + t + "</span>"); });
     wrap.appendChild(pr);

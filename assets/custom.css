@@ -1254,3 +1254,7 @@ html.v2l .kpi span, html.v2l .rng-axis { font-size: 13.5px; }
 html.v2l .hist2 .axis text { font-size: 14px; }
 @media (max-width: 420px) { html.v2l .axis-cap { font-size: 10px; letter-spacing: .01em; gap: 2px; } }
 html.v2l .kicker { line-height: 1.5; }
+/* title at the top of the About block */
+html.v2l .ab-title { position: relative; margin: 0 0 22px; padding-bottom: 14px; font: 600 clamp(30px, 3.4vw, 40px)/1.1 var(--sans); letter-spacing: -.015em; color: var(--ink); border-bottom: 1px solid var(--rule); }
+html.v2l .ab-title::after { content: ""; position: absolute; left: 0; bottom: -2px; width: 76px; height: 3px; background: var(--rust); }
+html.v2l #method-block.about-top .prose { font-size: 17.5px; line-height: 1.58; }
