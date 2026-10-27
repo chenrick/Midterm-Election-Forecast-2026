@@ -481,9 +481,16 @@
     s += "<text class='hc-kick' x='" + cx + "' y='" + (cy - L.inner * (IS_R ? 0.68 : 0.74)).toFixed(1) + "' text-anchor='middle'>" + esc(opts.kicker) + "</text>";
     if (IS_R && opts.d != null) {
       var off = Math.min(L.inner * 0.5, 78);
-      s += "<text class='hc-big hc-d' x='" + (cx - off).toFixed(1) + "' y='" + by.toFixed(1) + "' text-anchor='middle'>" + opts.d + "</text>";
+      // size the two big numbers so their outer top corners stay inside the innermost ring of dots
+      var ri = L.inner - L.dot - 26, dig = Math.max(String(opts.d).length, String(opts.r).length), fs = 58;
+      for (; fs > 24; fs--) {
+        var hw = dig * 0.64 * fs / 2, dyTop = L.inner * 0.30 + 0.72 * fs;
+        if (Math.sqrt((off + hw) * (off + hw) + dyTop * dyTop) <= ri) break;
+      }
+      var fsty = " style='font-size:" + fs + "px'";
+      s += "<text class='hc-big hc-d'" + fsty + " x='" + (cx - off).toFixed(1) + "' y='" + by.toFixed(1) + "' text-anchor='middle'>" + opts.d + "</text>";
       s += "<text class='hc-dash' x='" + cx + "' y='" + (by - 8).toFixed(1) + "' text-anchor='middle'>&#8212;</text>";
-      s += "<text class='hc-big hc-r' x='" + (cx + off).toFixed(1) + "' y='" + by.toFixed(1) + "' text-anchor='middle'>" + opts.r + "</text>";
+      s += "<text class='hc-big hc-r'" + fsty + " x='" + (cx + off).toFixed(1) + "' y='" + by.toFixed(1) + "' text-anchor='middle'>" + opts.r + "</text>";
       s += "<text class='hc-lab' x='" + (cx - off).toFixed(1) + "' y='" + (by + 20).toFixed(1) + "' text-anchor='middle'>DEMOCRATIC</text>";
       s += "<text class='hc-lab' x='" + (cx + off).toFixed(1) + "' y='" + (by + 20).toFixed(1) + "' text-anchor='middle'>REPUBLICAN</text>";
       (opts.sub2 || []).forEach(function (line, k) {
@@ -529,7 +536,7 @@
     var rs = M.house.slice().sort(byDem);
     var hD = M.house.filter(function (r) { return r.share != null && r.share > 0.5; }).length;
     var hR = M.house.filter(function (r) { return r.share != null && r.share < 0.5; }).length;
-    var sub2 = M.S ? ["Democrats win a majority in " + pct(pMajority(M.S.h, HOUSE_MAJ)) + " of simulations"] : [];
+    var sub2 = M.S ? ["Democrats win a majority", "in " + pct(pMajority(M.S.h, HOUSE_MAJ)) + " of simulations"] : [];
     var st = stage("Seat chart", "New", "Each dot is one of the 435 districts, ordered from most Democratic (left) to most Republican (right). The dashed line marks the 218-seat majority.");
     st.id = "v2-house-seats";
     st.appendChild(hemicycle({
