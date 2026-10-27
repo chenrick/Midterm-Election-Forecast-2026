@@ -32,13 +32,22 @@
     betterTable: true,         // sortable, filterable table (replaces the original table visually)
     stateDrawer: true,         // click a state for a detail panel
     richTooltips: true,
-    crossHighlight: true
+    crossHighlight: true,
+    /* ---- light layer (v2l): all of these only run when <html class="v2l"> is set (off with ?light=0) ---- */
+    headline: "Rick Chen - PLSC 2219|Election Forecast",   // text of the big title ("|" marks the line break; set to "" to keep the name from config.js)
+    geoMaps: true,             // real district (House) and state (Senate) shapes, with the hexagon / tile maps tucked below
+    flips: true,               // "Seats most likely to flip" panel
+    shareButtons: true,        // Copy link + Print in the nav bar
+    tableCsv: true,            // "Download CSV" under the races table
+    footerData: true,          // data download links + map credit in the footer
+    deepLinks: true            // #state=TX opens that state's panel
   };
   var POLLS_CLOSE = Date.UTC(2026, 10, 3, 23, 0, 0);   // Tue Nov 3, 2026, 6:00 pm Eastern (EST = UTC-5)
 
   var root = document.documentElement;
   var IS_V2 = root.classList.contains("v2");
   var IS_R = root.classList.contains("v2r");   // refined visual layer (add ?refined=0 to the address to turn it off)
+  var IS_L = root.classList.contains("v2l");   // light layer: lighter theme, geographic maps, extra panels (add ?light=0 to turn it off)
   var $ = function (id) { return document.getElementById(id); };
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
 
@@ -195,7 +204,7 @@
       });
       var repNotUp = 100 - A.demNotUp - senate.length;
       return { races: races, house: house, senate: senate, byId: byId, byName: byName, byState: byState, money: money,
-               useP: A.useP, useI: A.useI, S: A.S, demNotUp: A.demNotUp, repNotUp: repNotUp, hasMoney: !!res[4] };
+               useP: A.useP, useI: A.useI, S: A.S, demNotUp: A.demNotUp, repNotUp: repNotUp, hasMoney: !!res[4], hasSims: !!res[3] };
     });
   }
 
@@ -266,6 +275,27 @@
     if (!m || (m.dr == null && m.rr == null)) return "";
     return "D " + money$(m.dr) + " &middot; R " + money$(m.rr);
   }
+  function downloadText(name, text, type) {
+    try {
+      var a = document.createElement("a"), url = URL.createObjectURL(new Blob([text], { type: (type || "text/plain") + ";charset=utf-8" }));
+      a.href = url; a.download = name; document.body.appendChild(a); a.click();
+      setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 400);
+    } catch (e) { console.error("download failed", e); }
+  }
+  function toast(msg) {
+    var t = el("div", "v2-toast", esc(msg)); t.setAttribute("role", "status"); document.body.appendChild(t);
+    requestAnimationFrame(function () { t.classList.add("on"); });
+    setTimeout(function () { t.classList.remove("on"); setTimeout(function () { t.remove(); }, 300); }, 1800);
+  }
+  function copyText(text) {
+    var done = function () { toast("Link copied"); };
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(done, function () { legacyCopy(text); done(); }); }
+    else { legacyCopy(text); done(); }
+  }
+  function legacyCopy(text) {
+    var ta = document.createElement("textarea"); ta.value = text; ta.setAttribute("readonly", ""); ta.style.cssText = "position:fixed;left:-9999px;top:0";
+    document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); } catch (e) {} ta.remove();
+  }
   function sectionByTitle(t) {
     var hs = document.querySelectorAll("#content section.block > .block-head h2"), i;
     for (i = 0; i < hs.length; i++) if (hs[i].textContent.trim() === t) return hs[i].closest("section");
@@ -306,23 +336,35 @@
     if (ex) h += "<hr>" + ex;
     return h;
   }
-  function showTip(target, r) { tip.innerHTML = tipHTML(r); tip.hidden = false; placeTip(target); }
+  function placeTipAt(x, y) {   // next to the pointer (used by the geographic maps)
+    var tw = tip.offsetWidth, th = tip.offsetHeight;
+    var left = Math.min(Math.max(8, x + 16), window.innerWidth - tw - 8);
+    var top = y - th - 14; if (top < 64) top = Math.min(y + 20, window.innerHeight - th - 8);
+    tip.style.left = left + "px"; tip.style.top = top + "px";
+  }
+  function showTip(target, r, ev) {
+    tip.innerHTML = tipHTML(r); tip.hidden = false;
+    if (ev && ev.clientX != null && ev.type === "mouseenter") placeTipAt(ev.clientX, ev.clientY); else placeTip(target);
+  }
   function hideTip() { if (tip) tip.hidden = true; }
 
+  var ovHooks = [], selHooks = [];   // geographic maps register here (outline of the hovered / selected race or state)
   function hl(r, on) {
     var list = reg[r.race_id]; if (!list) return;
     for (var i = 0; i < list.length; i++) list[i].classList.toggle("hl", on);
+    for (i = 0; i < ovHooks.length; i++) ovHooks[i](r, on);
   }
   /* Wire one element to one race: tooltip, cross-highlight, click / Enter opens the state panel. */
   function wire(target, r, o) {
     o = o || {};
     (reg[r.race_id] = reg[r.race_id] || []).push(target);
-    var over = function () {
-      if (OPTS.richTooltips || o.force) showTip(target, r);
+    var over = function (ev) {
+      if (OPTS.richTooltips || o.force) showTip(target, r, o.pointer ? ev : null);
       if (OPTS.crossHighlight) hl(r, true);
     };
     var out = function () { hideTip(); if (OPTS.crossHighlight) hl(r, false); };
     target.addEventListener("mouseenter", over); target.addEventListener("focus", over);
+    if (o.pointer) target.addEventListener("mousemove", function (ev) { if (!tip.hidden) placeTipAt(ev.clientX, ev.clientY); });
     target.addEventListener("mouseleave", out); target.addEventListener("blur", out);
     if (OPTS.stateDrawer) {
       var open = function (ev) { hideTip(); openDrawer(r.state, r, target); if (ev) ev.stopPropagation(); };
@@ -402,9 +444,10 @@
   function hemicycle(opts) {
     // opts: seats[], W, H, kicker, big (html), d/r (numbers, refined lockup), sub, sub2, majLabel, aria
     var L = layoutHemi(opts.seats.length, opts.W, opts.H, opts.a), id = "hx" + (++hatchN), n = opts.seats.length;
-    var s = "<svg viewBox='0 0 " + opts.W + " " + opts.H + "' role='img' aria-label='" + esc(opts.aria) + "'>";
+    var vbH = Math.max(opts.H, Math.ceil(L.cy + L.dot + 33));   // always tall enough for the baseline labels under the arc
+    var s = "<svg viewBox='0 0 " + opts.W + " " + vbH + "' role='img' aria-label='" + esc(opts.aria) + "'>";
     s += "<defs><pattern id='" + id + "' width='5' height='5' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'><line x1='0' y1='0' x2='0' y2='5' stroke='rgba(255,255,255,.55)' stroke-width='1.7'/></pattern>";
-    if (IS_R) s += "<radialGradient id='" + id + "s' cx='34%' cy='28%' r='80%'><stop offset='0' stop-color='#fff' stop-opacity='.34'/><stop offset='.5' stop-color='#fff' stop-opacity='0'/><stop offset='1' stop-color='#000' stop-opacity='.3'/></radialGradient>";
+    if (IS_R && !IS_L) s += "<radialGradient id='" + id + "s' cx='34%' cy='28%' r='80%'><stop offset='0' stop-color='#fff' stop-opacity='.34'/><stop offset='.5' stop-color='#fff' stop-opacity='0'/><stop offset='1' stop-color='#000' stop-opacity='.3'/></radialGradient>";
     s += "</defs>";
     var cx = L.cx, cy = L.cy, gr = L.R + L.dot + 13, gi = L.inner - L.dot - 13, i, t;
     if (IS_R) {   // guide rings, baseline and seat-number ticks behind the dots
@@ -417,10 +460,10 @@
         var pt = L.pts[t - 1], an = pt.ang, c = Math.cos(an), sn = Math.sin(an);
         if (Math.abs(an - Math.PI / 2) < 0.14) continue;   // leave the apex to the majority label
         s += "<line class='gd tk' x1='" + (cx + gr * c).toFixed(1) + "' y1='" + (cy - gr * sn).toFixed(1) + "' x2='" + (cx + (gr + 7) * c).toFixed(1) + "' y2='" + (cy - (gr + 7) * sn).toFixed(1) + "'/>";
-        s += "<text class='tklab' x='" + (cx + (gr + 13) * c).toFixed(1) + "' y='" + (cy - (gr + 13) * sn + 3).toFixed(1) + "' text-anchor='" + (c < -0.25 ? "end" : (c > 0.25 ? "start" : "middle")) + "'>" + t + "</text>";
+        s += "<text class='tklab fit' x='" + (cx + (gr + 13) * c).toFixed(1) + "' y='" + (cy - (gr + 13) * sn + 3).toFixed(1) + "' text-anchor='" + (c < -0.25 ? "end" : (c > 0.25 ? "start" : "middle")) + "'>" + t + "</text>";
       }
-      s += "<text class='tklab' x='" + (cx - gr - 6).toFixed(1) + "' y='" + (cy + L.dot + 27) + "' text-anchor='middle'>Most Democratic</text>";
-      s += "<text class='tklab' x='" + (cx + gr + 6).toFixed(1) + "' y='" + (cy + L.dot + 27) + "' text-anchor='middle'>Most Republican</text>";
+      s += "<text class='tklab fit' x='" + (cx - gr).toFixed(1) + "' y='" + (cy + L.dot + 27) + "' text-anchor='start'>Most Democratic</text>";
+      s += "<text class='tklab fit' x='" + (cx + gr).toFixed(1) + "' y='" + (cy + L.dot + 27) + "' text-anchor='end'>Most Republican</text>";
       s += "</g>";
     }
     opts.seats.forEach(function (seat, i) {
@@ -428,12 +471,12 @@
       if (seat.hold) cls = "d hold " + (seat.hold === "d" ? "f-safe-d" : "f-safe-r");
       else { cls = "d f-" + (seat.r.rating ? seat.r.rating.key : "toss"); }
       s += "<circle class='" + cls + "' data-i='" + i + "' cx='" + p.x.toFixed(1) + "' cy='" + p.y.toFixed(1) + "' r='" + L.dot.toFixed(2) + "'/>";
-      if (IS_R && !seat.hold) s += "<circle class='sh' cx='" + p.x.toFixed(1) + "' cy='" + p.y.toFixed(1) + "' r='" + L.dot.toFixed(2) + "' fill='url(#" + id + "s)' pointer-events='none'/>";
+      if (IS_R && !IS_L && !seat.hold) s += "<circle class='sh' cx='" + p.x.toFixed(1) + "' cy='" + p.y.toFixed(1) + "' r='" + L.dot.toFixed(2) + "' fill='url(#" + id + "s)' pointer-events='none'/>";
       if (seat.r && isFixed(seat.r)) s += "<circle cx='" + p.x.toFixed(1) + "' cy='" + p.y.toFixed(1) + "' r='" + L.dot.toFixed(2) + "' fill='url(#" + id + ")' pointer-events='none'/>";
     });
     var top = IS_R ? cy - gr - 20 : L.cy - L.R - L.dot - 6;
     s += "<line class='maj' x1='" + cx + "' x2='" + cx + "' y1='" + (top + 6) + "' y2='" + (cy - L.inner + L.dot * 0.4).toFixed(1) + "'/>";
-    s += "<text class='majlab' x='" + cx + "' y='" + (top - 4) + "' text-anchor='middle'>" + esc(opts.majLabel) + "</text>";
+    s += "<text class='majlab fit' x='" + cx + "' y='" + (top - 4) + "' text-anchor='middle'>" + esc(opts.majLabel) + "</text>";
     var by = cy - L.inner * 0.30;
     s += "<text class='hc-kick' x='" + cx + "' y='" + (cy - L.inner * (IS_R ? 0.68 : 0.74)).toFixed(1) + "' text-anchor='middle'>" + esc(opts.kicker) + "</text>";
     if (IS_R && opts.d != null) {
@@ -455,6 +498,7 @@
     }
     s += "</svg>";
     var wrap = el("div", "hemi", s);
+    wrap.hemiFit = true;
     if (opts.cap) wrap.appendChild(el("p", "hemi-cap", esc(opts.cap)));   // shown instead of the small centre text on phones
     wrap.querySelectorAll("circle.d").forEach(function (c) {
       var seat = opts.seats[+c.getAttribute("data-i")];
@@ -497,6 +541,7 @@
     st.appendChild(el("div", "legend", ratingLegend()));
     var head = sec.querySelector(".block-head");
     head.parentNode.insertBefore(st, head.nextSibling);
+    fitLabels(st); if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { fitLabels(st); });
     return st;
   }
 
@@ -521,6 +566,7 @@
     if (OPTS.pathToControl) st.appendChild(pathToControl(contested));
     var head = sec.querySelector(".block-head");
     head.parentNode.insertBefore(st, head.nextSibling);
+    fitLabels(st); if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { fitLabels(st); });
   }
   function pathToControl(contested) {
     var n = contested.length, dNeed = SENATE_MAJ - M.demNotUp, rNeed = 50 - M.repNotUp;   // VP breaks 50-50 ties for Republicans
@@ -553,7 +599,7 @@
     xs.forEach(function (x) { counts[x] = (counts[x] || 0) + 1; });
     var lo = Math.floor(quant(xs, 0.002)), hi = Math.ceil(quant(xs, 0.998));
     lo = Math.min(lo, maj - 1); hi = Math.max(hi, maj);
-    var span = hi - lo + 1, W = 520, H = 200, padL = 6, padR = 6, padT = 40, padB = 70;
+    var span = hi - lo + 1, W = 520, H = 200, padL = 8, padR = 8, padT = 58, padB = 84;
     var maxC = 0; for (v = lo; v <= hi; v++) maxC = Math.max(maxC, counts[v] || 0);
     var bw = (W - padL - padR) / span, gap = bw > 4 ? 1.6 : (bw > 2 ? 0.8 : 0);
     var pm = pMajority(xs, maj), p10 = quant(xs, 0.1), p50 = quant(xs, 0.5), p90 = quant(xs, 0.9);
@@ -562,30 +608,36 @@
     var mx = padL + (maj - lo) * bw;
     var s = "<svg viewBox='0 0 " + W + " " + (padT + H + padB) + "' role='img' aria-label='" + lab + " seat distribution: Democrats win " + what + " in " + pct(pm) + " of simulations. Median " + Math.round(p50) + " seats, 80% range " + Math.round(p10) + " to " + Math.round(p90) + ".'>";
     var gid = "hg" + (++hatchN);
-    if (IS_R) s += "<defs><linearGradient id='" + gid + "d' x1='0' y1='0' x2='0' y2='1'><stop offset='0' style='stop-color:var(--likely-d)'/><stop offset='1' style='stop-color:var(--safe-d)'/></linearGradient><linearGradient id='" + gid + "r' x1='0' y1='0' x2='0' y2='1'><stop offset='0' style='stop-color:var(--likely-r)'/><stop offset='1' style='stop-color:var(--safe-r)'/></linearGradient></defs>";
+    if (IS_R && !IS_L) s += "<defs><linearGradient id='" + gid + "d' x1='0' y1='0' x2='0' y2='1'><stop offset='0' style='stop-color:var(--likely-d)'/><stop offset='1' style='stop-color:var(--safe-d)'/></linearGradient><linearGradient id='" + gid + "r' x1='0' y1='0' x2='0' y2='1'><stop offset='0' style='stop-color:var(--likely-r)'/><stop offset='1' style='stop-color:var(--safe-r)'/></linearGradient></defs>";
     s += "<rect class='tint-r' x='" + padL + "' y='" + padT + "' width='" + (mx - padL) + "' height='" + H + "'/><rect class='tint-d' x='" + mx + "' y='" + padT + "' width='" + (W - padR - mx) + "' height='" + H + "'/>";
     [0.25, 0.5, 0.75].forEach(function (f) { var y = padT + H - H * f; s += "<line class='gridl' x1='" + padL + "' x2='" + (W - padR) + "' y1='" + y + "' y2='" + y + "'/>"; });
     for (v = lo; v <= hi; v++) {
       var c = counts[v] || 0; if (!c) continue;
       var h = Math.max(1, (H - 4) * c / maxC), x = padL + (v - lo) * bw, y = padT + H - h;
       s += "<rect class='b' x='" + (x + gap / 2).toFixed(2) + "' y='" + y.toFixed(2) + "' width='" + Math.max(0.6, bw - gap).toFixed(2) + "' height='" + h.toFixed(2) +
-        "' rx='" + Math.min(1.8, (bw - gap) / 2).toFixed(2) + "' fill='" + (IS_R ? "url(#" + gid + (v >= maj ? "d" : "r") + ")" : (v >= maj ? "var(--likely-d)" : "var(--likely-r)")) + "' data-v='" + v + "' data-c='" + c + "'/>";
+        "' rx='" + Math.min(1.8, (bw - gap) / 2).toFixed(2) + "' fill='" + (IS_R && !IS_L ? "url(#" + gid + (v >= maj ? "d" : "r") + ")" : (v >= maj ? "var(--likely-d)" : "var(--likely-r)")) + "' data-v='" + v + "' data-c='" + c + "'/>";
     }
     s += "<line class='base' x1='" + padL + "' x2='" + (W - padR) + "' y1='" + (padT + H) + "' y2='" + (padT + H) + "'/>";
+    // Labels are placed so they always stay inside the chart: side labels sit in the two top corners,
+    // and the majority / median / bracket labels are clamped to the plot (a small post-pass, fitLabels, re-checks real text widths).
+    var tw = function (str, px, ls) { return str.length * (px * 0.56 + (ls || 0)); };
+    var clampC = function (c, w) { return Math.min(Math.max(c, padL + w / 2), W - padR - w / 2); };
+    var mlab = "Majority: " + maj + " seats", mcx = clampC(mx, tw(mlab, 11));
     s += "<line class='maj' x1='" + mx + "' x2='" + mx + "' y1='" + (padT - 12) + "' y2='" + (padT + H) + "'/>";
-    s += "<text class='majlab' x='" + mx + "' y='" + (padT - 26) + "' text-anchor='middle'>Majority: " + maj + " seats</text>";
-    s += "<text class='sidelab r' x='" + (mx - 8) + "' y='" + (padT - 8) + "' text-anchor='end'>Republicans " + pct(1 - pm) + "</text>";
-    s += "<text class='sidelab d' x='" + (mx + 8) + "' y='" + (padT - 8) + "' text-anchor='start'>Democrats " + pct(pm) + "</text>";
+    s += "<text class='sidelab r fit' x='" + padL + "' y='" + (padT - 38) + "' text-anchor='start'>Republicans " + pct(1 - pm) + "</text>";
+    s += "<text class='sidelab d fit' x='" + (W - padR) + "' y='" + (padT - 38) + "' text-anchor='end'>Democrats " + pct(pm) + "</text>";
+    s += "<text class='majlab fit' x='" + mcx.toFixed(1) + "' y='" + (padT - 17) + "' text-anchor='middle'>" + mlab + "</text>";
     var step = span > 60 ? 10 : (span > 25 ? 5 : (span > 10 ? 2 : 1));
     s += "<g class='axis'>";
     for (v = Math.ceil(lo / step) * step; v <= hi; v += step) s += "<text x='" + X(v) + "' y='" + (padT + H + 15) + "' text-anchor='middle'>" + v + "</text>";
     s += "</g>";
     var mxm = X(p50);   // median marker
     s += "<polygon class='med' points='" + (mxm - 5) + "," + (padT + H + 24) + " " + (mxm + 5) + "," + (padT + H + 24) + " " + mxm + "," + (padT + H + 17) + "'/>";
-    s += "<text class='medlab' x='" + mxm + "' y='" + (padT + H + 36) + "' text-anchor='middle'>Median " + Math.round(p50) + "</text>";
-    var bx1 = X(p10), bx2 = X(p90), by = padT + H + 52;
+    s += "<text class='medlab fit' x='" + clampC(mxm, tw("Median " + Math.round(p50), 11)).toFixed(1) + "' y='" + (padT + H + 36) + "' text-anchor='middle'>Median " + Math.round(p50) + "</text>";
+    var bx1 = X(p10), bx2 = X(p90), by = padT + H + 54;
     s += "<path class='brk' d='M" + bx1 + "," + (by - 5) + " V" + by + " H" + bx2 + " V" + (by - 5) + "'/>";
-    s += "<text class='brklab' x='" + ((bx1 + bx2) / 2) + "' y='" + (by + 14) + "' text-anchor='middle'>80% of simulations: " + Math.round(p10) + " to " + Math.round(p90) + " seats</text>";
+    var blab = "80% of simulations: " + Math.round(p10) + " to " + Math.round(p90) + " seats";
+    s += "<text class='brklab fit' x='" + clampC((bx1 + bx2) / 2, tw(blab, 11)).toFixed(1) + "' y='" + (by + 18) + "' text-anchor='middle'>" + blab + "</text>";
     s += "</svg>";
     card.innerHTML = "<h3>" + lab + "</h3><div class='kpis'>" +
       "<div class='kpi d'><b>" + pct(pm) + "</b><span>Democrats win</span></div>" +
@@ -602,12 +654,28 @@
     });
     return card;
   }
+  /* Re-check every SVG label marked class "fit" against its real rendered width and nudge it back inside the picture. */
+  function fitLabels(scope) {
+    (scope || document).querySelectorAll("svg").forEach(function (svg) {
+      var vb = svg.viewBox && svg.viewBox.baseVal; if (!vb || !vb.width) return;
+      svg.querySelectorAll("text.fit").forEach(function (t) {
+        t.removeAttribute("transform");
+        var b; try { b = t.getBBox(); } catch (e) { return; }
+        if (!b.width) return;
+        var dx = 0, lo = vb.x + 3, hi = vb.x + vb.width - 3;
+        if (b.x < lo) dx = lo - b.x; else if (b.x + b.width > hi) dx = hi - (b.x + b.width);
+        if (dx) t.setAttribute("transform", "translate(" + dx.toFixed(1) + ",0)");
+      });
+    });
+  }
   function betterDistributions() {
     var box = $("dist"); if (!box || !M.S) return;
     var wrap = el("div", "dist2"); wrap.id = "dist-v2";
     wrap.appendChild(hist2("House", M.S.h, HOUSE_MAJ, "the House"));
     wrap.appendChild(hist2("Senate", M.S.s, SENATE_MAJ, "the Senate"));
     box.parentNode.insertBefore(wrap, box);
+    fitLabels(wrap);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { fitLabels(wrap); });
     if (OPTS.keepOriginalCharts) {
       var d = el("details", "orig", "<summary>Original histograms (for comparison)</summary>");
       box.parentNode.insertBefore(d, box); d.appendChild(box);
@@ -733,12 +801,13 @@
       name: function (r) { return raceName(r); }
     };
     var DEF_DIR = { close: 1, margin: -1, p: -1, rating: 1, name: 1 };
+    var lastRows = [];
     var ui = el("div", "v2-table");
     ui.innerHTML =
       "<div class='tctl'><div class='seg' role='group' aria-label='Chamber'>" +
       "<button type='button' data-o='all' class='on'>All</button><button type='button' data-o='house'>House</button><button type='button' data-o='senate'>Senate</button></div>" +
       "<input id='search2' type='search' placeholder='Search state, district or candidate' aria-label='Search races'>" +
-      "<span class='tcount' aria-live='polite'></span></div>" +
+      "<span class='tcount' aria-live='polite'></span>" + (IS_L && OPTS.tableCsv ? "<button type='button' class='dl-btn tcsv' title='Download the rows that match the current filters'>Download CSV</button>" : "") + "</div>" +
       "<div class='tctl'><div class='chips' role='group' aria-label='Filter by rating'>" +
       RATINGS.map(function (k) { return "<button type='button' class='chip' data-r='" + k.key + "'><i class='r-" + k.key + "'></i>" + k.label + "</button>"; }).join("") +
       "<span class='chip-state'></span></div></div>" +
@@ -759,6 +828,7 @@
       });
       var f = KEYS[st.sort];
       rows.sort(function (a, b) { var x = f(a), y = f(b); return (x < y ? -1 : x > y ? 1 : close(a) - close(b)) * st.dir; });
+      lastRows = rows;
       var filtered = !!(st.q || st.state || Object.keys(st.ratings).some(function (k) { return st.ratings[k]; }));
       var shown = (st.all || filtered) ? rows : rows.slice(0, st.N);
       var arrow = function (k) { return "<span class='ar'>" + (st.sort === k ? (st.dir === 1 ? "▲" : "▼") : "") + "</span>"; };
@@ -804,6 +874,15 @@
     ui.querySelector("#search2").addEventListener("input", function (e) { st.q = e.target.value.trim().toLowerCase(); draw(); });
     ui.querySelector(".tall").addEventListener("click", function () { st.all = !st.all; draw(); });
     ui.querySelector(".treset").addEventListener("click", function () { st.sort = "close"; st.dir = 1; draw(); });
+    var csvBtn = ui.querySelector(".tcsv");
+    if (csvBtn) csvBtn.addEventListener("click", function () {
+      var cols = ["race_id", "race", "office", "state", "dem_candidate", "rep_candidate", "holder_party", "pred_dem_share", "p_dem_win", "lo_80", "hi_80", "rating"];
+      var q = function (v) { v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+      var lines = [cols.join(",")].concat(lastRows.map(function (r) {
+        return [r.race_id, raceName(r), r.office, r.state, r.dem_candidate, r.rep_candidate, r.incumbent_party, r.share, r.p, r.lo, r.hi, r.rating ? r.rating.label : ""].map(q).join(",");
+      }));
+      downloadText("races-" + (st.state || st.office) + ".csv", lines.join("\n") + "\n", "text/csv");
+    });
     draw();
     tableApi = {
       filterState: function (s) { st.state = s; st.office = "all"; ui.querySelectorAll(".seg button").forEach(function (x) { x.classList.toggle("on", x.getAttribute("data-o") === "all"); }); draw(); },
@@ -865,7 +944,10 @@
     else html += "<div class='dr-h'>Senate</div><div class='cands' style='color:var(--ink-3);font-size:13px'>No Senate race in " + esc(STATE_NAMES[st]) + " in 2026.</div>";
     if (hs.length) html += "<div class='dr-h'>House districts</div>" + hs.map(raceCard).join("");
     html += "<button type='button' class='dr-btn'>Show these races in the table</button>";
+    if (geoMaps.length) html += "<button type='button' class='dr-btn dr-btn2' data-zoom='" + esc(st) + "'>Zoom the map to " + esc(STATE_NAMES[st] || st) + "</button>";
     drawer.innerHTML = html;
+    var zb = drawer.querySelector("[data-zoom]");
+    if (zb) zb.addEventListener("click", function () { closeDrawer(); geoZoomTo(st, true); });
     drawer.querySelector(".dr-x").addEventListener("click", closeDrawer);
     drawer.querySelector(".dr-btn").addEventListener("click", function () {
       closeDrawer();
@@ -880,11 +962,19 @@
     var row = document.querySelector("#house-grid .srow[data-state='" + st + "']"); if (row) row.classList.add("sel");
     backdrop.classList.add("open"); drawer.classList.add("open"); drawer.scrollTop = 0;
     drawer.querySelector(".dr-x").focus();
+    selHooks.forEach(function (h) { h(st); });
+    setHash(st);
+  }
+  function setHash(st) {
+    if (!IS_L || !OPTS.deepLinks || !window.history || !history.replaceState) return;
+    try { history.replaceState(null, "", location.pathname + location.search + (st ? "#state=" + st : "")); } catch (e) {}
   }
   function closeDrawer() {
     if (!drawer || !drawer.classList.contains("open")) return;
     drawer.classList.remove("open"); backdrop.classList.remove("open");
     document.querySelectorAll("#house-grid .srow.sel").forEach(function (x) { x.classList.remove("sel"); });
+    selHooks.forEach(function (h) { h(null); });
+    if (/^#state=/.test(location.hash)) setHash(null);
     if (lastFocus && lastFocus.focus) { try { lastFocus.focus({ preventScroll: true }); } catch (e) { lastFocus.focus(); } }
   }
 
@@ -899,13 +989,22 @@
       var s = sectionByTitle(d[0]); if (s) { s.id = s.id || d[1]; items.push([s.id, d[2]]); }
     });
     var dec = $("v2-decisive"); if (dec) items.push(["v2-decisive", "Decisive races"]);
+    var fl = $("v2-flips"); if (fl) items.push(["v2-flips", "Likely flips"]);
     var cl = sectionByTitle("Closest races"); if (cl) { cl.id = cl.id || "races"; items.push([cl.id, "Closest races"]); }
     var me = $("method-block"); if (me) items.push(["method-block", "Method"]);
     var nav = el("nav", "v2-nav"); nav.setAttribute("aria-label", "Sections");
     var w = el("div", "wrap"); var ul = el("ul");
     items.forEach(function (it) { ul.appendChild(el("li", null, "<a href='#" + it[0] + "' data-t='" + it[0] + "'>" + it[1] + "</a>")); });
     w.appendChild(ul);
-    if (OPTS.viewSwitch) { var a = el("a", "v2-switch", "Classic view"); a.href = viewHref(true); a.title = "See the previous design"; w.appendChild(a); }
+    if (IS_L && OPTS.shareButtons) {
+      var tools = el("div", "v2-tools");
+      var cp = el("button", "v2-tool", "Copy link"); cp.type = "button"; cp.title = "Copy a link to this page";
+      cp.addEventListener("click", function () { copyText(location.href); });
+      var pr = el("button", "v2-tool", "Print"); pr.type = "button"; pr.title = "Print or save as PDF";
+      pr.addEventListener("click", function () { window.print(); });
+      tools.appendChild(cp); tools.appendChild(pr); w.appendChild(tools);
+    }
+    if (OPTS.viewSwitch && !IS_L) { var a = el("a", "v2-switch", "Classic view"); a.href = viewHref(true); a.title = "See the previous design"; w.appendChild(a); }
     nav.appendChild(w);
     main.parentNode.insertBefore(nav, main);
     var links = [].slice.call(nav.querySelectorAll("a[data-t]")), ticking = false;
@@ -920,6 +1019,261 @@
     window.addEventListener("scroll", function () { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
     window.addEventListener("resize", onScroll);
     onScroll();
+  }
+
+  /* =====================================================================================
+     10b. SEATS MOST LIKELY TO FLIP (light layer)
+     ===================================================================================== */
+  function buildFlips() {
+    var closest = sectionByTitle("Closest races"); if (!closest) return;
+    var holder = function (r) { return r.incumbent_party === "D" || r.incumbent_party === "R" ? r.incumbent_party : null; };
+    var winner = function (r) { return r.share == null ? null : (r.share > 0.5 ? "D" : (r.share < 0.5 ? "R" : null)); };
+    var score = function (r) {   // higher = more likely to change hands
+      var h = holder(r); if (!h || r.share == null) return null;
+      var dv = M.useP ? r.p : r.share;
+      return h === "D" ? 0.5 - dv : dv - 0.5;
+    };
+    var sec = el("section", "block"); sec.id = "v2-flips";
+    sec.innerHTML = "<div class='block-head'><h2>Seats most likely to flip</h2><p class='note'>Seats the forecast expects to change party, and the seats closest to doing so. A seat counts as held by the party of its current holder (or the holder it replaces, if open).</p></div><div class='decide flips'></div>";
+    var grid = sec.querySelector(".flips");
+    [["house", "House"], ["senate", "Senate"]].forEach(function (c) {
+      var rs = (c[0] === "house" ? M.house : M.senate).filter(function (r) { return score(r) != null; });
+      var toD = rs.filter(function (r) { return holder(r) === "R" && winner(r) === "D"; }).length;
+      var toR = rs.filter(function (r) { return holder(r) === "D" && winner(r) === "R"; }).length;
+      var net = toD - toR;
+      var list = rs.slice().sort(function (a, b) { return score(b) - score(a); }).slice(0, 10);
+      var card = el("div", "card vcard flipcard");
+      var head = "<div class='vcard-head'><h3>" + c[1] + "</h3></div>";
+      var kp = "<div class='kpis'><div class='kpi d'><b>" + toD + "</b><span>Projected R to D</span></div>" +
+        "<div class='kpi r'><b>" + toR + "</b><span>Projected D to R</span></div>" +
+        "<div class='kpi'><b>" + (net === 0 ? "even" : (net > 0 ? "D +" : "R +") + Math.abs(net)) + "</b><span>Net change</span></div></div>";
+      var rows = list.map(function (r) {
+        var h = holder(r), w = winner(r), flipped = w && w !== h;
+        var chance = M.useP ? (h === "D" ? 1 - r.p : r.p) : null;
+        var vl = chance != null ? pct(chance) : marginText(r);
+        var bar = chance != null ? "<span class='tr'><b style='width:" + Math.max(1.5, 100 * chance).toFixed(1) + "%;background:" + (h === "D" ? "var(--safe-r)" : "var(--safe-d)") + "'></b></span>" : "<span class='tr tr0'></span>";
+        return "<div class='flip-row" + (flipped ? " is-flip" : "") + "' tabindex='0' role='button' data-rid='" + esc(r.race_id) + "' aria-label='" + esc(raceName(r)) + ", " + h + " seat, " + (chance != null ? pct(chance) + " chance to flip" : marginText(r)) + (flipped ? ", projected flip" : "") + "'>" +
+          "<span class='nm'>" + esc(c[0] === "senate" ? STATE_NAMES[r.state] + (r.special === "1" ? " (sp.)" : "") : raceName(r)) + "</span>" +
+          "<span class='hd'><i class='r-" + (h === "D" ? "safe-d" : "safe-r") + "'></i>" + h + (flipped ? " <em>&rarr; " + w + "</em>" : " hold") + "</span>" + bar +
+          "<span class='vl num'>" + vl + "</span></div>";
+      }).join("");
+      card.innerHTML = head + kp + "<div class='flip-cap'><span>Seat</span><span>Holder</span><span>" + (M.useP ? "Flip chance" : "Margin") + "</span><span></span></div><div class='flip-list'>" +
+        (rows || "<p class='note'>No seats with a known current holder.</p>") + "</div>";
+      card.querySelectorAll(".flip-row").forEach(function (row) { wire(row, M.byId[row.getAttribute("data-rid")], { keys: true, force: true }); });
+      grid.appendChild(card);
+    });
+    closest.parentNode.insertBefore(sec, closest);
+  }
+
+  /* =====================================================================================
+     12. GEOGRAPHIC MAPS  (House: 435 districts; Senate: state shapes)
+     Boundaries: amCharts 5 geodata, 120th Congress set (assets/geo-us.json, projected + simplified).
+     ===================================================================================== */
+  var geo = null, geoMaps = [];
+  var OFFSHORE = { VT: [838, 114], NH: [866, 93], MA: [952, 172], RI: [956, 198], CT: [944, 222], NJ: [917, 247], DE: [908, 273], MD: [901, 297] };
+  var LAB_NUDGE = { MI: [14, 24], FL: [24, -4], LA: [-12, 0], ID: [0, 18], MN: [-4, 10], KY: [12, 2], WV: [-2, 4], NY: [4, 6], ME: [-2, 12], VA: [8, 2], CA: [-6, 0], HI: [0, 0], WA: [0, 0] };
+  var LIGHT_TEXT = { "safe-d": 1, "likely-d": 1, "safe-r": 1, "likely-r": 1 };
+
+  function loadGeo() {
+    return fetch("assets/geo-us.json").then(function (r) { if (!r.ok) throw new Error("geo-us.json " + r.status); return r.json(); });
+  }
+  function shortVal(r) { return M.useP ? pct(r.p) : marginText(r).replace(" ", ""); }
+
+  function makeZoom(svg) {
+    var W = geo.w, H = geo.h, vb = [0, 0, W, H], raf = 0;
+    function set(v) {
+      vb = v; svg.setAttribute("viewBox", v.map(function (n) { return +n.toFixed(2); }).join(" "));
+      var z = W / v[2]; svg.classList.toggle("zoomed", z > 1.03); svg.style.setProperty("--zs", z.toFixed(3));
+    }
+    function clamp(v) {
+      var w = Math.min(W, Math.max(W / 14, v[2])), h = w * H / W;
+      return [Math.min(Math.max(0, v[0]), W - w), Math.min(Math.max(0, v[1]), H - h), w, h];
+    }
+    function go(v, instant) {
+      v = clamp(v); cancelAnimationFrame(raf);
+      if (instant || reduceMotion) { set(v); return; }
+      var a = vb.slice(), t0 = performance.now(), D = 420;
+      (function step(t) {
+        var k = Math.min(1, (t - t0) / D); k = 1 - Math.pow(1 - k, 3);
+        set(a.map(function (x, i) { return x + (v[i] - x) * k; }));
+        if (k < 1) raf = requestAnimationFrame(step);
+      })(t0);
+    }
+    return {
+      box: function (bb) {
+        var w = Math.max(bb.width * 1.3, bb.height * 1.3 * W / H, 96), h = w * H / W;
+        go([bb.x + bb.width / 2 - w / 2, bb.y + bb.height / 2 - h / 2, w, h]);
+      },
+      reset: function () { go([0, 0, W, H]); },
+      step: function (f, cx, cy) {
+        cx = cx == null ? vb[0] + vb[2] / 2 : cx; cy = cy == null ? vb[1] + vb[3] / 2 : cy;
+        var nw = vb[2] / f, nh = nw * H / W;
+        go([cx - (cx - vb[0]) / f, cy - (cy - vb[1]) / f, nw, nh], f !== 1 && false);
+      },
+      pan: function (dx, dy) { cancelAnimationFrame(raf); set(clamp([vb[0] - dx, vb[1] - dy, vb[2], vb[3]])); },
+      view: function () { return vb; }
+    };
+  }
+
+  function buildGeoMap(kind) {
+    var isH = kind === "house", sec = sectionByTitle(isH ? "House" : "Senate"); if (!sec) return;
+    var old = (isH ? $("house-grid") : $("senate-map")); old = old && old.closest(".stage");
+    var st = stage(isH ? "House map: all 435 districts" : "Senate map by state", "New", null);
+    st.classList.add("geo-stage"); st.id = "v2-" + kind + "-map";
+    var W = geo.w, H = geo.h, id = "gm" + (++hatchN), defs = "", fills = "", hatch = "", outs = "", labs = "", leaders = "";
+    var odById = {}, stateOfPath = {};
+    var aria = isH ? "Map of the 435 House districts, colored by forecast rating" : "Map of the states, colored by Senate forecast rating";
+
+    function rcls(r) { return r && r.rating ? "f-" + r.rating.key : "f-none"; }
+    if (isH) {
+      Object.keys(geo.d).forEach(function (key) {
+        var r = M.byName[key], d = geo.d[key];
+        fills += "<path class='gp " + rcls(r) + "' " + (r ? "data-r='" + esc(r.race_id) + "' " : "") + "data-s='" + key.slice(0, 2) + "' d='" + d + "'/>";
+        if (r) { odById[r.race_id] = d; if (isFixed(r)) hatch += "<path class='gh' d='" + d + "' fill='url(#" + id + "h)'/>"; }
+      });
+    } else {
+      Object.keys(geo.s).forEach(function (stt) {
+        var d = geo.s[stt], b = M.byState[stt], rs = ((b && b.senate) || []).slice().sort(function (x, y) { return (x.special === "1") - (y.special === "1"); });
+        if (!rs.length) { fills += "<path class='gp f-none notup' data-s='" + stt + "' d='" + d + "'/>"; return; }
+        fills += "<path class='gp " + rcls(rs[0]) + "' data-r='" + esc(rs[0].race_id) + "' data-s='" + stt + "' d='" + d + "'/>";
+        odById[rs[0].race_id] = d;
+        if (isFixed(rs[0])) hatch += "<path class='gh' d='" + d + "' fill='url(#" + id + "h)'/>";
+        if (rs[1]) {   // two races in one state (a special election): the second takes the lower-right half
+          var c = geo.cen[stt], pts = (c[0] + 400) + "," + (c[1] - 400) + " " + (c[0] + 400) + "," + (c[1] + 400) + " " + (c[0] - 400) + "," + (c[1] + 400);
+          defs += "<clipPath id='" + id + "c" + stt + "'><path d='" + d + "'/></clipPath>";
+          fills += "<polygon class='gp " + rcls(rs[1]) + " half' data-r='" + esc(rs[1].race_id) + "' data-s='" + stt + "' clip-path='url(#" + id + "c" + stt + ")' points='" + pts + "'/>";
+          odById[rs[1].race_id] = d;
+          if (isFixed(rs[1])) hatch += "<polygon class='gh' clip-path='url(#" + id + "c" + stt + ")' points='" + pts + "' fill='url(#" + id + "h)'/>";
+        }
+      });
+    }
+    Object.keys(geo.s).forEach(function (stt) { outs += "<path class='so' data-s='" + stt + "' d='" + geo.s[stt] + "'/>"; });
+
+    Object.keys(geo.cen).forEach(function (stt) {
+      var c = geo.cen[stt].slice(), nd = LAB_NUDGE[stt], off = OFFSHORE[stt], b = M.byState[stt], rs = b ? (isH ? b.house : b.senate) : [];
+      if (isH && !rs.length) return;
+      if (nd) { c[0] += nd[0]; c[1] += nd[1]; }
+      var x = c[0], y = c[1], cls = "lab", sub = "";
+      if (off) { leaders += "<line class='ldr' x1='" + geo.cen[stt][0] + "' y1='" + geo.cen[stt][1] + "' x2='" + (off[0] - (off[0] > geo.cen[stt][0] ? 7 : -7)) + "' y2='" + off[1] + "'/>"; x = off[0]; y = off[1]; cls += " ext"; }
+      if (!isH) {
+        var r0 = rs.slice().sort(function (p, q) { return (p.special === "1") - (q.special === "1"); });
+        if (r0.length) {
+          sub = r0.map(shortVal).join(" · ");
+          cls += LIGHT_TEXT[r0[0].rating && r0[0].rating.key] && !off ? " lt" : " dk";
+        } else cls += " mu";
+      } else cls += " dk";
+      labs += "<g class='" + cls + "' data-s='" + stt + "' transform='translate(" + x.toFixed(1) + "," + y.toFixed(1) + ")'><text class='la' text-anchor='middle' y='" + (sub ? -1 : 3.5) + "'>" + stt + "</text>" +
+        (sub ? "<text class='lm num' text-anchor='middle' y='9.5'>" + sub + "</text>" : "") + "</g>";
+    });
+
+    var svg = "<svg class='geo geo-" + kind + (isH ? "" : " show-lab") + "' viewBox='0 0 " + W + " " + H + "' role='group' aria-label='" + aria + "' xmlns='http://www.w3.org/2000/svg'>" +
+      "<defs><pattern id='" + id + "h' width='5' height='5' patternUnits='userSpaceOnUse' patternTransform='rotate(45)'><line x1='0' y1='0' x2='0' y2='5' class='hatch-ln'/></pattern>" + defs + "</defs>" +
+      "<g class='g-fill'>" + fills + "</g><g class='g-hatch'>" + hatch + "</g><g class='g-out'>" + outs + "</g>" +
+      "<g class='g-top'><path class='sel' d=''/><path class='ov' d=''/></g><g class='g-lab'>" + leaders + labs + "</g></svg>";
+
+    var opts = ["<option value=''>Jump to a state…</option>"].concat(Object.keys(STATE_NAMES).sort(function (a, b) { return STATE_NAMES[a] < STATE_NAMES[b] ? -1 : 1; }).map(function (a) { return "<option value='" + a + "'>" + STATE_NAMES[a] + "</option>"; })).join("");
+    var bar = el("div", "geo-bar", "<label class='geo-sel'><span class='sr'>Jump to a state</span><select>" + opts + "</select></label>" +
+      "<div class='geo-zoom' role='group' aria-label='Map zoom'><button type='button' data-z='in' aria-label='Zoom in'>+</button><button type='button' data-z='out' aria-label='Zoom out'>&minus;</button><button type='button' data-z='reset' class='txt'>Reset view</button></div>" +
+      "<button type='button' class='geo-tog' aria-pressed='" + (!isH) + "'>" + (isH ? "State labels" : "Labels") + "</button>" +
+      "<button type='button' class='geo-open' hidden></button>" +
+      "<span class='geo-hint'>Hover for details &middot; click for the state panel</span>");
+    var wrap = el("div", "geo-wrap", svg);
+    st.appendChild(bar); st.appendChild(wrap);
+    st.appendChild(el("div", "legend", ratingLegend()));
+    var credit = " Boundaries: <a href='https://www.amcharts.com/' rel='noopener'>amCharts</a> geodata, simplified for the web.";
+    st.appendChild(el("p", "geo-foot", isH ? "Districts are the lines in force for 2026 (120th Congress set). Louisiana's new lines are shown as published by the map source and may differ from the final enacted plan." + credit : "State shapes follow the same boundary set." + credit));
+    var head = sec.querySelector(".block-head");
+    if (old) {
+      old.parentNode.insertBefore(st, old);
+      var d = el("details", "orig prev-map", "<summary>Previous version: " + (isH ? "hexagon map" : "tile map") + "</summary>");
+      old.parentNode.insertBefore(d, old); d.appendChild(old);
+    } else head.parentNode.insertBefore(st, head.nextSibling);
+
+    var svgEl = wrap.querySelector("svg"), Z = makeZoom(svgEl), ovP = svgEl.querySelector(".ov"), selP = svgEl.querySelector(".sel");
+    var focusSt = null, openBtn = bar.querySelector(".geo-open"), hint = bar.querySelector(".geo-hint"), sel = bar.querySelector("select");
+
+    function setFocus(stt) {
+      svgEl.querySelectorAll(".in").forEach(function (p) { p.classList.remove("in"); });
+      focusSt = stt; svgEl.classList.toggle("focus", !!stt);
+      if (stt) svgEl.querySelectorAll(".gp[data-s='" + stt + "'], .lab[data-s='" + stt + "']").forEach(function (p) { p.classList.add("in"); });
+      openBtn.hidden = !stt; hint.hidden = !!stt;
+      if (stt) openBtn.textContent = STATE_NAMES[stt] + ": open state panel";
+      sel.value = stt || "";
+    }
+    function zoomState(stt) {
+      var p = svgEl.querySelector(".so[data-s='" + stt + "']"); if (!p) return;
+      Z.box(p.getBBox()); setFocus(stt);
+    }
+    var api = { kind: kind, svg: svgEl, wrap: wrap, zoomState: zoomState, el: st };
+    geoMaps.push(api);
+
+    // wiring: tooltips, click -> state panel, outline of the hovered race
+    svgEl.querySelectorAll(".gp").forEach(function (p) {
+      var rid = p.getAttribute("data-r"), stt = p.getAttribute("data-s"), r = rid && M.byId[rid];
+      p.setAttribute("role", "button");
+      if (r) {
+        p.setAttribute("aria-label", raceName(r) + ": " + (isFixed(r) ? fixedText(r) : marginText(r)) + ". Press Enter for the state details.");
+        p.tabIndex = isH ? -1 : 0;
+        wire(p, r, { keys: true, pointer: true });
+      } else {
+        var nm = STATE_NAMES[stt] || stt;
+        p.setAttribute("aria-label", nm + ": no Senate race in 2026. Press Enter for the state details."); p.tabIndex = isH ? -1 : 0;
+        p.addEventListener("mouseenter", function (ev) { tip.innerHTML = "<b>" + esc(nm) + "</b><div class='tsub'>No Senate race in 2026</div>"; tip.hidden = false; placeTipAt(ev.clientX, ev.clientY); });
+        p.addEventListener("mousemove", function (ev) { if (!tip.hidden) placeTipAt(ev.clientX, ev.clientY); });
+        p.addEventListener("mouseleave", hideTip);
+        p.addEventListener("click", function (ev) { hideTip(); openDrawer(stt, null, p); ev.stopPropagation(); });
+        p.addEventListener("keydown", function (ev) { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); openDrawer(stt, null, p); } });
+      }
+    });
+    ovHooks.push(function (r, on) { var d = odById[r.race_id]; if (d) ovP.setAttribute("d", on ? d : ""); });
+    selHooks.push(function (stt) { selP.setAttribute("d", stt ? geo.s[stt] || "" : ""); svgEl.classList.toggle("has-sel", !!stt); });
+
+    // controls
+    sel.addEventListener("change", function () { if (sel.value) zoomState(sel.value); else { Z.reset(); setFocus(null); } });
+    bar.querySelectorAll(".geo-zoom button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var z = b.getAttribute("data-z");
+        if (z === "reset") { Z.reset(); setFocus(null); } else Z.step(z === "in" ? 1.7 : 1 / 1.7);
+        if (z === "out" && Z.view()[2] * 1.7 >= geo.w) setFocus(null);
+      });
+    });
+    bar.querySelector(".geo-tog").addEventListener("click", function (ev) {
+      var on = svgEl.classList.toggle("show-lab"); ev.currentTarget.setAttribute("aria-pressed", on);
+    });
+    openBtn.addEventListener("click", function () { if (focusSt) openDrawer(focusSt, null, openBtn); });
+
+    // drag to pan when zoomed; ctrl/cmd + wheel (or trackpad pinch) to zoom
+    var drag = null, moved = false;
+    svgEl.addEventListener("pointerdown", function (ev) {
+      if (!svgEl.classList.contains("zoomed") || ev.button !== 0) return;
+      drag = { x: ev.clientX, y: ev.clientY, id: ev.pointerId }; moved = false;
+    });
+    svgEl.addEventListener("pointermove", function (ev) {
+      if (!drag) return;
+      var dx = ev.clientX - drag.x, dy = ev.clientY - drag.y;
+      if (!moved && Math.abs(dx) + Math.abs(dy) < 5) return;
+      if (!moved) { moved = true; try { svgEl.setPointerCapture(drag.id); } catch (e) {} svgEl.classList.add("dragging"); hideTip(); }
+      var rect = svgEl.getBoundingClientRect(), k = Z.view()[2] / rect.width;
+      Z.pan(dx * k, dy * k); drag.x = ev.clientX; drag.y = ev.clientY;
+    });
+    var endDrag = function () { drag = null; svgEl.classList.remove("dragging"); };
+    svgEl.addEventListener("pointerup", endDrag); svgEl.addEventListener("pointercancel", endDrag);
+    svgEl.addEventListener("click", function (ev) { if (moved) { ev.stopPropagation(); ev.preventDefault(); moved = false; } }, true);
+    svgEl.addEventListener("wheel", function (ev) {
+      if (!(ev.ctrlKey || ev.metaKey)) return;
+      ev.preventDefault();
+      var rect = svgEl.getBoundingClientRect(), v = Z.view();
+      var cx = v[0] + (ev.clientX - rect.left) / rect.width * v[2], cy = v[1] + (ev.clientY - rect.top) / rect.height * v[3];
+      Z.step(ev.deltaY < 0 ? 1.25 : 1 / 1.25, cx, cy);
+    }, { passive: false });
+    return api;
+  }
+  function geoZoomTo(stt, scroll) {
+    if (!geoMaps.length) return;
+    // zoom every map to the state; bring the House map (the busiest one) into view
+    geoMaps.forEach(function (g) { g.zoomState(stt); });
+    var tgt = geoMaps.filter(function (g) { return g.kind === "house"; })[0] || geoMaps[0];
+    if (scroll && tgt.el) tgt.el.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
   }
 
   /* =====================================================================================
@@ -951,10 +1305,48 @@
     if (OPTS.hemicycle) { safe("house hemicycle", buildHouseHemicycle); safe("senate hemicycle", buildSenateHemicycle); }
     if (OPTS.betterDistributions) safe("distributions", betterDistributions);
     if (OPTS.decisiveRaces) safe("decisive", buildDecisive);
+    if (IS_L && OPTS.flips) safe("flips", buildFlips);
     if (OPTS.betterTable) safe("table", buildTable);
+    if (IS_L && OPTS.headline) safe("headline", function () {
+      var h = $("title"), parts = OPTS.headline.split("|");
+      if (h) h.innerHTML = parts.map(function (t) { return "<span class='h1l'>" + esc(t.trim()) + "</span>"; }).join(" ");
+      document.title = parts.join(" ").replace(/\s+/g, " ").trim();
+    });
+    if (IS_L && OPTS.footerData) safe("footer", buildFooterData);
     if (OPTS.stickyNav) safe("nav", buildNav);
     // keep the tooltip from lingering when the page scrolls
     window.addEventListener("scroll", hideTip, { passive: true });
+    // geographic maps load their boundary file separately; if it cannot load, the hexagon / tile maps simply stay as they are
+    if (IS_L && OPTS.geoMaps) {
+      loadGeo().then(function (g) {
+        geo = g;
+        safe("senate map", function () { buildGeoMap("senate"); });
+        safe("house map", function () { buildGeoMap("house"); });
+        var f = document.querySelector(".site-foot .fine");
+        if (f && geoMaps.length) f.insertAdjacentHTML("beforeend", " Map boundaries: <a href='https://www.amcharts.com/' rel='noopener'>amCharts</a> 5 geodata (120th Congress set), used under its linkware license; shapes simplified and re-projected for this site.");
+        deepLink();
+      }).catch(function (e) { console.warn("custom.js: geographic maps unavailable (" + e.message + "); the hexagon / tile maps are shown instead."); deepLink(); });
+    } else deepLink();
+  }
+  function deepLink() {
+    if (!IS_L || !OPTS.deepLinks) return;
+    var m = /^#state=([A-Za-z]{2})$/.exec(location.hash); if (!m) return;
+    var st = m[1].toUpperCase(); if (!M.byState[st]) return;
+    setTimeout(function () { openDrawer(st, null, null); }, 250);
+  }
+  function buildFooterData() {
+    var foot = document.querySelector(".site-foot .wrap"); if (!foot) return;
+    var files = [["Forecast (CSV)", CFG.forecast_file || "forecast.csv"]];
+    if (M.hasSims) files.push(["Seat simulations (CSV)", CFG.sims_file || "seat_sims.csv"]);
+    files.push(["Race file (CSV)", "data/races_2026.csv"]);
+    var box = el("p", "foot-data"); box.innerHTML = "<span>Data</span>" + files.map(function (f) { return "<a href='" + esc(f[1]) + "' download>" + esc(f[0]) + "</a>"; }).join("");
+    var fine = foot.querySelector(".fine"); foot.insertBefore(box, fine);
+    if (OPTS.viewSwitch) {
+      var q = new URLSearchParams(location.search); q.delete("classic"); q.delete("light");
+      var base = location.pathname + (q.toString() ? "?" + q.toString() + "&" : "?");
+      var vs = el("p", "foot-data"); vs.innerHTML = "<span>Other views</span><a href='" + esc(base + "light=0") + "'>Previous dark design</a><a href='" + esc(base + "classic=1") + "'>Original class template</a>";
+      foot.insertBefore(vs, fine);
+    }
   }
 
   if (OPTS.flipClock) safe("flip clock", buildFlipClock);
