@@ -1050,3 +1050,75 @@ html.v2l .geo-foot a { color: var(--rust-d); }
   html.v2l .geo-bar, html.v2l .v2-tools, html.v2l .dl-btn, html.v2l .v2-toast { display: none !important; }
   html.v2l .stage-head, html.v2l .hist2 h3, html.v2l .vcard-head, html.v2l .site-head { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+/* =====================================================================================
+   DEPTH LAYER (v2l): a slightly deeper warm paper tone, raised white panels with layered shadows,
+   beveled rust bands, and the About-this-model blurb at the top.  Remove this block (or use ?light=0) to undo.
+   ===================================================================================== */
+html.v2l:root {
+  --bg: #e8e0cb;
+  --rule: #cabb97;
+  --grid: #e2d8bf;
+  --empty: #dcd4bf;
+  --empty-line: #c2b697;
+  --cream: #eee4cb;
+  --ink-2: #3c4a51;
+  --ink-3: #52606a;
+  --lift-1: 0 1px 0 rgba(255,255,255,.9) inset, 0 1px 2px rgba(48,36,12,.16), 0 12px 26px -12px rgba(48,36,12,.34);
+  --lift-2: 0 1px 0 rgba(255,255,255,.9) inset, 0 2px 4px rgba(48,36,12,.14), 0 20px 38px -16px rgba(48,36,12,.42);
+}
+html.v2l .stage, html.v2l .tip, html.v2l .drawer, html.v2l .topline .card, html.v2l .v2-nav, html.v2l .site-foot {
+  --rule: #cabb97; --grid: #e2d8bf; --empty: #dcd4bf; --empty-line: #c2b697; --ink-2: #3c4a51; --ink-3: #52606a;
+}
+html.v2l body {
+  background-color: #e8e0cb;
+  background-image:
+    radial-gradient(1100px 520px at 12% 0, rgba(255,250,235,.75), transparent 70%),
+    radial-gradient(900px 600px at 100% 34%, rgba(180,81,31,.07), transparent 70%),
+    linear-gradient(180deg, #ebe4d1 0, #e6dec8 55%, #e0d7bf 100%);
+}
+html.v2l .site-head { box-shadow: 0 14px 30px -14px rgba(10,20,26,.55); position: relative; z-index: 2; }
+html.v2l .v2-nav { background: linear-gradient(180deg, rgba(255,253,247,.97), rgba(246,240,224,.97)); box-shadow: 0 1px 0 rgba(255,255,255,.8) inset, 0 12px 22px -16px rgba(40,28,8,.6); }
+html.v2l .stage, html.v2l .card, html.v2l .table-wrap, html.v2l #method-block .prose, html.v2l .topline .card {
+  border-color: var(--rule); border-radius: 8px; box-shadow: var(--lift-1);
+}
+html.v2l .stage { background: linear-gradient(180deg, #fffefa 0, #fcf9f1 100%); }
+html.v2l .topline .card { background: linear-gradient(180deg, #fffefb, #fbf8ef); border-top-color: var(--rust); }
+html.v2l .stage-head, html.v2l .vcard-head, html.v2l .dist2 .card.hist2 h3 {
+  background: linear-gradient(180deg, #bf5a26, #a94a1a); box-shadow: 0 1px 0 rgba(255,255,255,.18) inset, 0 -2px 0 rgba(60,20,0,.22) inset;
+}
+html.v2l .stage .legend { border-top-color: var(--rule); }
+html.v2l .block-head { border-bottom-color: #bfae86; }
+html.v2l .seg, html.v2l .v2-tool, html.v2l .dl-btn, html.v2l .geo-zoom, html.v2l .geo-tog, html.v2l .chip, html.v2l #search2 { box-shadow: 0 1px 0 rgba(255,255,255,.9) inset, 0 2px 5px -2px rgba(48,36,12,.3); }
+html.v2l .seg button.on, html.v2l .chip.on, html.v2l .geo-tog[aria-pressed="true"], html.v2l .v2-tool:hover { box-shadow: none; }
+html.v2l th { background: #fbf8ef; }
+html.v2l #races-table2 tbody tr:nth-child(even) td { background: rgba(226,216,191,.28); }
+html.v2l .site-foot { background: linear-gradient(180deg, #e9dec2, #e2d5b4); box-shadow: 0 14px 30px -14px rgba(40,28,8,.5) inset; }
+html.v2l .geo-wrap { background: radial-gradient(900px 420px at 50% 40%, #fffefb, #f7f2e4 80%); border-radius: 6px; }
+
+/* ---- About this model: the blurb that opens the page ---- */
+html.v2l #method-block.about-top { margin: 0 0 56px; }
+html.v2l #method-block.about-top .block-head { display: none; }
+html.v2l #method-block.about-top .ab-wrap {
+  position: relative; background: linear-gradient(180deg, #fffefb, #fbf8ef); border: 1px solid var(--rule); border-top: 5px solid var(--rust);
+  border-radius: 8px; box-shadow: var(--lift-2); padding: 28px 36px 10px;
+}
+html.v2l .ab-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 18px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--rule); }
+html.v2l .ab-kick { order: 2; font: 600 12px var(--sans); letter-spacing: .24em; text-transform: uppercase; color: var(--rust); }
+html.v2l .ab-title { order: 1; font: 600 clamp(28px, 3vw, 36px)/1.1 var(--sans); letter-spacing: -.015em; color: var(--ink); margin: 0; }
+html.v2l .ab-by { order: 3; flex-basis: 100%; margin: 4px 0 0; font: 500 14.5px/1.5 var(--sans); color: var(--ink-3); }
+html.v2l #method-block.about-top .prose { background: none; border: 0; box-shadow: none; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 34px; font-size: 16px; line-height: 1.6; }
+html.v2l #method-block.about-top .prose p { margin: 0 0 20px; max-width: none; color: var(--ink); }
+html.v2l #method-block.about-top .prose p strong { font-weight: 600; }
+html.v2l .ab-lab { display: block; margin: 0 0 8px; font: 600 11.5px var(--sans); letter-spacing: .2em; text-transform: uppercase; color: var(--rust); }
+@media (max-width: 980px) {
+  html.v2l #method-block.about-top .prose { grid-template-columns: 1fr; }
+  html.v2l #method-block.about-top .prose p { max-width: 70ch; }
+}
+@media (max-width: 760px) {
+  html.v2l #method-block.about-top .ab-wrap { padding: 22px 20px 6px; }
+  html.v2l #method-block.about-top .prose { font-size: 16.5px; }
+}
+@media print {
+  html.v2l body { background: #fff; background-image: none; }
+  html.v2l #method-block.about-top .ab-wrap { box-shadow: none; }
+}

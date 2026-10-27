@@ -34,6 +34,7 @@
     richTooltips: true,
     crossHighlight: true,
     /* ---- light layer (v2l): all of these only run when <html class="v2l"> is set (off with ?light=0) ---- */
+    aboutTop: true,   // move the "About this model" blurb to the very top of the page (false = leave it at the bottom)
     headline: "Rick Chen - PLSC 2219|Election Forecast",   // text of the big title ("|" marks the line break; set to "" to keep the name from config.js)
     geoMaps: true,             // real district (House) and state (Senate) shapes, with the hexagon / tile maps tucked below
     flips: true,               // "Seats most likely to flip" panel
@@ -991,6 +992,8 @@
   function buildNav() {
     var main = document.querySelector("main"); if (!main) return;
     var content = $("content"), items = [];
+    var abt = $("method-block");
+    if (IS_L && OPTS.aboutTop && abt) items.push(["method-block", "About"]);
     var tl = content.querySelector(".topline"); if (tl) { tl.id = tl.id || "overview"; items.push(["overview", "Overview"]); }
     [["Senate", "senate", "Senate"], ["House", "house", "House"], ["Seat distribution", "distribution", "Distribution"]].forEach(function (d) {
       var s = sectionByTitle(d[0]); if (s) { s.id = s.id || d[1]; items.push([s.id, d[2]]); }
@@ -998,7 +1001,7 @@
     var dec = $("v2-decisive"); if (dec) items.push(["v2-decisive", "Decisive races"]);
     var fl = $("v2-flips"); if (fl) items.push(["v2-flips", "Likely flips"]);
     var cl = sectionByTitle("Closest races"); if (cl) { cl.id = cl.id || "races"; items.push([cl.id, "Closest races"]); }
-    var me = $("method-block"); if (me) items.push(["method-block", "Method"]);
+    var me = $("method-block"); if (me && !(IS_L && OPTS.aboutTop)) items.push(["method-block", "Method"]);
     var nav = el("nav", "v2-nav"); nav.setAttribute("aria-label", "Sections");
     var w = el("div", "wrap"); var ul = el("ul");
     items.forEach(function (it) { ul.appendChild(el("li", null, "<a href='#" + it[0] + "' data-t='" + it[0] + "'>" + it[1] + "</a>")); });
@@ -1286,6 +1289,20 @@
   /* =====================================================================================
      11. WIRING IT ALL TOGETHER
      ===================================================================================== */
+  function moveAbout() {
+    var me = $("method-block"), content = $("content"), pr = $("method"); if (!me || !content || !pr || me.hidden) return;
+    me.classList.add("about-top");
+    var wrap = el("div", "ab-wrap");
+    wrap.appendChild(el("div", "ab-head",
+      "<div class='ab-kick'>Read this first</div><h2 class='ab-title'>About this model</h2>" +
+      "<p class='ab-by'>What goes in, how the national mood is set, and how uncertainty is handled.</p>"));
+    var ps = pr.querySelectorAll("p");
+    if (ps.length) { var f = ps[0], m = /^(.+?[.!?])(\s|$)/.exec(f.textContent); if (m) f.innerHTML = "<strong>" + esc(m[1]) + "</strong>" + esc(f.textContent.slice(m[1].length)); }
+    if (ps.length === 3) ["Inputs", "National mood", "Uncertainty"].forEach(function (t, k) { ps[k].insertAdjacentHTML("afterbegin", "<span class='ab-lab'>" + t + "</span>"); });
+    wrap.appendChild(pr);
+    me.appendChild(wrap);
+    content.insertBefore(me, content.firstChild);
+  }
   function enhance() {
     tip = $("tip");
     if (OPTS.stateDrawer) safe("drawer", buildDrawer);
@@ -1320,6 +1337,7 @@
       document.title = parts.join(" ").replace(/\s+/g, " ").trim();
     });
     if (IS_L && OPTS.footerData) safe("footer", buildFooterData);
+    if (IS_L && OPTS.aboutTop) safe("about", moveAbout);
     if (OPTS.stickyNav) safe("nav", buildNav);
     // keep the tooltip from lingering when the page scrolls
     window.addEventListener("scroll", hideTip, { passive: true });
