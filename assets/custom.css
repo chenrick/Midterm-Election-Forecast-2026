@@ -1126,7 +1126,7 @@ html.v2l .seg button.on { background: var(--rust); }
 
 /* ---- seat summaries ---- */
 html.v2l .party-line { font: 600 21px/1.3 var(--sans); color: var(--ink); margin-top: 10px; }
-html.v2l .party-line b, html.v2l .hemi-cap b { font-weight: 700; }
+html.v2l .party-line b, html.v2l .hemi-cap b { font-weight: 600; }
 html.v2l b.pd { color: var(--safe-d); } html.v2l b.pr { color: var(--safe-r); }
 html.v2l .topline .card .sub { color: var(--ink); font-weight: 500; font-size: 17px; }
 html.v2l .topline .card .sub[style] { font-size: 15.5px !important; color: var(--ink); font-weight: 500; }
@@ -1137,10 +1137,10 @@ html.v2l .hemi-cap .hc-win { display: block; font: 500 16px/1.35 var(--sans); ma
 @media (min-width: 761px) { html.v2l .hemi-cap { display: none; } }
 
 /* ---- hemicycle centre labels: full words, on every screen size ---- */
-html.v2l .hemi .hc-lab { display: inline; font: 700 11.5px var(--sans); letter-spacing: .2em; text-transform: uppercase; }
+html.v2l .hemi .hc-lab { display: inline; font: 600 11.5px var(--sans); letter-spacing: .2em; text-transform: uppercase; }
 html.v2l .hemi .hc-lab.hc-ld { fill: var(--safe-d); } html.v2l .hemi .hc-lab.hc-lr { fill: var(--safe-r); }
-html.v2l .hemi .hc-lab.hc-small { text-transform: none; letter-spacing: .01em; font-weight: 700; }
-html.v2l .hemi .hc-big { font-weight: 700; }
+html.v2l .hemi .hc-lab.hc-small { text-transform: none; letter-spacing: .01em; font-weight: 600; }
+html.v2l .hemi .hc-big { font-weight: 600; }
 html.v2l .hemi .hc-sub { fill: var(--ink); font-weight: 500; }
 
 /* ---- bolder, larger, easier to read ---- */
@@ -1148,13 +1148,13 @@ html.v2l body { font-size: 18.5px; font-weight: 500; line-height: 1.55; }
 html.v2l .note { font-size: 16.5px; color: var(--ink-2); font-weight: 500; }
 html.v2l .v2-nav a { font: 600 13.5px var(--sans); letter-spacing: .09em; color: var(--ink); padding: 18px 12px 14px; }
 html.v2l .v2-tool { font-weight: 600; font-size: 13px; }
-html.v2l .block-head h2 { font: 700 clamp(34px, 4.2vw, 50px)/1.05 var(--sans); letter-spacing: -.02em; }
+html.v2l .block-head h2 { font: 600 clamp(34px, 4.2vw, 50px)/1.05 var(--sans); letter-spacing: -.02em; }
 html.v2l .block-head .note { font-size: 18px; color: var(--ink); }
-html.v2l .block-head::before { font-size: 13px; font-weight: 700; }
-html.v2l .stage-head h3, html.v2l .vcard-head h3, html.v2l .dist2 .card.hist2 h3 { font-size: 23px; font-weight: 700; }
+html.v2l .block-head::before { font-size: 13px; font-weight: 600; }
+html.v2l .stage-head h3, html.v2l .vcard-head h3, html.v2l .dist2 .card.hist2 h3 { font-size: 23px; font-weight: 600; }
 html.v2l .stage-head p { font-size: 16px; font-weight: 500; color: #fff; }
-html.v2l .card .lab { font-size: 14px; font-weight: 700; }
-html.v2l .card .hero { font-weight: 700; font-size: clamp(36px, 3.9vw, 50px); white-space: nowrap; }
+html.v2l .card .lab { font-size: 14px; font-weight: 600; }
+html.v2l .card .hero { font-weight: 600; font-size: clamp(36px, 3.9vw, 50px); white-space: nowrap; }
 html.v2l .card { background: linear-gradient(180deg, #faf5e7, #f4edd9); }
 html.v2l .lad-row, html.v2l .axis-cap { grid-template-columns: 46px 100px minmax(0, 1fr) 76px; }
 html.v2l .lad-row, html.v2l .rng-row { height: 30px; }
@@ -1168,32 +1168,32 @@ html.v2l .rng-row .vl, html.v2l .lad-row .vl { white-space: nowrap; }
 html.v2l .axis-cap .cap span, html.v2l .axis-cap span { white-space: nowrap; }
 html.v2l .axis-cap { font-size: 12px; letter-spacing: .08em; }
 @media (max-width: 420px) { html.v2l .card .hero { font-size: 34px; } }
-html.v2l .kpi b { font-weight: 700; font-size: 38px; }
-html.v2l .kpi span, html.v2l .axis-cap, html.v2l .rng-axis { font-size: 12.5px; font-weight: 700; color: var(--ink-2); }
+html.v2l .kpi b { font-weight: 600; font-size: 38px; }
+html.v2l .kpi span, html.v2l .axis-cap, html.v2l .rng-axis { font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
 html.v2l .stage .legend, html.v2l .legend { font: 600 15.5px var(--sans); color: var(--ink); }
 html.v2l .legend .sw { width: 16px; height: 16px; }
-html.v2l .pb-labels { font-size: 15.5px; } html.v2l .pb-labels b { font-size: 18px; font-weight: 700; }
-html.v2l .pb-need { font-size: 17px; } html.v2l .pb-midlab { font-size: 13px; font-weight: 700; }
+html.v2l .pb-labels { font-size: 15.5px; } html.v2l .pb-labels b { font-size: 18px; font-weight: 600; }
+html.v2l .pb-need { font-size: 17px; } html.v2l .pb-midlab { font-size: 13px; font-weight: 600; }
 html.v2l .lad-row, html.v2l .rng-row { font-size: 16.5px; font-weight: 600; }
 html.v2l .lad-row .rk, html.v2l .lad-row .vl, html.v2l .rng-row .vl { font-size: 15px; font-weight: 600; }
 html.v2l .lad-foot, html.v2l .vcard .note { font-size: 16px; color: var(--ink); }
 html.v2l td { font-size: 16.5px; font-weight: 500; color: var(--ink); }
 html.v2l td .sub { font-size: 14px; color: var(--ink-2); }
-html.v2l th { font-size: 12.5px; font-weight: 700; }
-html.v2l .pill { font-size: 13.5px; font-weight: 700; }
+html.v2l th { font-size: 12.5px; font-weight: 600; }
+html.v2l .pill { font-size: 13.5px; font-weight: 600; }
 html.v2l .chip { font-size: 15px; font-weight: 600; }
 html.v2l .prose { font-size: 18.5px; font-weight: 500; }
-html.v2l .tip { font-size: 16px; } html.v2l .tip b { font-size: 20px; font-weight: 700; }
+html.v2l .tip { font-size: 16px; } html.v2l .tip b { font-size: 20px; font-weight: 600; }
 html.v2l .hist2 .axis text, html.v2l .hist2 .majlab, html.v2l .hist2 .medlab, html.v2l .hist2 .brklab { font-size: 13.5px; font-weight: 600; }
-html.v2l .hist2 .sidelab { font-size: 13.5px; font-weight: 700; }
+html.v2l .hist2 .sidelab { font-size: 13.5px; font-weight: 600; }
 html.v2l .hemi .tklab { font-size: 12.5px; font-weight: 600; fill: var(--ink-2); }
-html.v2l .hemi .majlab { font-size: 13.5px; font-weight: 700; }
-html.v2l .geo .lab .la { font-weight: 700; }
+html.v2l .hemi .majlab { font-size: 13.5px; font-weight: 600; }
+html.v2l .geo .lab .la { font-weight: 600; }
 html.v2l .geo-hint { font-size: 15px; color: var(--ink-2); font-weight: 500; }
 html.v2l .site-foot .fine { font-size: 15px; color: var(--ink-2); font-weight: 500; }
 html.v2l .site-foot .links a, html.v2l .foot-data { font-size: 14.5px; }
-html.v2l .dr-top h3 { font-weight: 700; }
-html.v2l .dr-race .t1 b { font-weight: 700; }
+html.v2l .dr-top h3 { font-weight: 600; }
+html.v2l .dr-race .t1 b { font-weight: 600; }
 @media (max-width: 420px) {
   html.v2l .kpi span, html.v2l .axis-cap, html.v2l .rng-axis { font-size: 11px; letter-spacing: .06em; }
   html.v2l .axis-cap, html.v2l .axis-cap .cap, html.v2l .axis-cap span { white-space: nowrap; font-size: 10px; letter-spacing: .02em; }
@@ -1211,7 +1211,46 @@ html.v2l .dr-race .t1 b { font-weight: 700; }
 }
 /* "Democratic 215 – Republican 220" used as the big card headline */
 html.v2l .card .hero.hero-pl { font-size: clamp(28px, 3.1vw, 38px); white-space: normal; line-height: 1.15; }
-html.v2l .card .hero.hero-pl b { font-weight: 700; }
+html.v2l .card .hero.hero-pl b { font-weight: 600; }
 html.v2l .card .hero.hero-pl b.pd { color: var(--safe-d); } html.v2l .card .hero.hero-pl b.pr { color: var(--safe-r); }
 @media (max-width: 420px) { html.v2l .card .hero.hero-pl { font-size: 27px; } }
 html.v2l .card .hero.hero-pl .nb { white-space: nowrap; }
+/* =====================================================================================
+   FONT SWAP (v2l): the whole site in Newsreader (the serif used in the page title), with lining figures.
+   To go back to the previous sans-serif, delete this block (or put "Jost" back in --sans below).
+   ===================================================================================== */
+html.v2l:root {
+  --sans: "Newsreader", "Iowan Old Style", "Palatino Linotype", Georgia, "Times New Roman", serif;
+  --serif: var(--sans);
+  --mono: var(--sans);
+}
+/* the font shorthand resets font features, so force lining figures everywhere (Newsreader defaults to old-style digits) */
+html.v2l, html.v2l *, html.v2l *::before, html.v2l *::after { font-feature-settings: "lnum" 1 !important; font-variant-numeric: lining-nums; }
+html.v2l .num, html.v2l .hero, html.v2l td, html.v2l .kpi b, html.v2l .hc-big, html.v2l .lm, html.v2l .fd, html.v2l .vl, html.v2l .rk, html.v2l .pb-labels b, html.v2l .party-line {
+  font-feature-settings: "lnum" 1, "tnum" 1 !important; font-variant-numeric: lining-nums tabular-nums;
+}
+html.v2l .site-head h1 { font-weight: 500; letter-spacing: -.015em; }
+html.v2l body { font-optical-sizing: auto; }
+/* Newsreader runs narrower and lighter than the sans it replaces: nudge sizes so everything stays easy to read */
+html.v2l body { font-size: 19.5px; }
+html.v2l .v2-nav a { font-size: 13.5px; letter-spacing: .05em; padding-left: 9px; padding-right: 9px; font-weight: 600; }
+html.v2l .v2-tool { font-size: 13px; letter-spacing: .08em; }
+html.v2l .note, html.v2l .block-head .note { font-size: 18.5px; }
+html.v2l .topline .card .sub { font-size: 18.5px; }
+html.v2l .party-line { font-size: 23px; }
+html.v2l .legend, html.v2l .stage .legend { font-size: 16.5px; }
+html.v2l td { font-size: 17.5px; }
+html.v2l .prose, html.v2l #method-block.about-top .prose { font-size: 19px; }
+html.v2l .stage-head p { font-size: 17px; }
+@media (max-width: 760px) { html.v2l body { font-size: 18.5px; } }
+html.v2l .axis-cap { font-size: 12.5px; letter-spacing: .05em; gap: 10px; }
+html.v2l .hist2 .axis text, html.v2l .hist2 .majlab, html.v2l .hist2 .medlab, html.v2l .hist2 .brklab { font-size: 15px; }
+html.v2l .hist2 .sidelab { font-size: 14.5px; }
+html.v2l .hemi .tklab { font-size: 14px; }
+html.v2l .hemi .majlab { font-size: 15px; }
+html.v2l .hemi .hc-lab { font-size: 13px; }
+html.v2l .hemi .hc-sub { font-size: 17px; }
+html.v2l .kpi span, html.v2l .rng-axis { font-size: 13.5px; }
+html.v2l .hist2 .axis text { font-size: 14px; }
+@media (max-width: 420px) { html.v2l .axis-cap { font-size: 10px; letter-spacing: .01em; gap: 2px; } }
+html.v2l .kicker { line-height: 1.5; }

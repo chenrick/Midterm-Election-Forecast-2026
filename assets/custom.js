@@ -485,7 +485,7 @@
       // size the two big numbers so their outer top corners stay inside the innermost ring of dots
       var ri = L.inner - L.dot - 26, dig = Math.max(String(opts.d).length, String(opts.r).length), fs = 58;
       for (; fs > 24; fs--) {
-        var hw = dig * 0.64 * fs / 2, dyTop = L.inner * 0.30 + 0.72 * fs;
+        var hw = dig * 0.56 * fs / 2, dyTop = L.inner * 0.30 + 0.72 * fs;
         if (Math.sqrt((off + hw) * (off + hw) + dyTop * dyTop) <= ri) break;
       }
       var fsty = " style='font-size:" + fs + "px'";
