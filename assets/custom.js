@@ -1,5 +1,6 @@
 /* =====================================================================================
    REDESIGN (v2) SCRIPT  -  assets/custom.js
+   Editorial-light styling is supplied by the final visual-only layer in custom.css.
    Adds the flip-clock countdown, sticky section nav, honeycomb hexagons, seat hemicycles,
    Senate path-to-control bar, upgraded seat-distribution charts, "races that decide control"
    (ladder + ranges), a sortable/filterable table, richer tooltips, a state panel and
