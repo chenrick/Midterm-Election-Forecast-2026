@@ -1258,3 +1258,23 @@ html.v2l .kicker { line-height: 1.5; }
 html.v2l .ab-title { position: relative; margin: 0 0 22px; padding-bottom: 14px; font: 600 clamp(30px, 3.4vw, 40px)/1.1 var(--sans); letter-spacing: -.015em; color: var(--ink); border-bottom: 1px solid var(--rule); }
 html.v2l .ab-title::after { content: ""; position: absolute; left: 0; bottom: -2px; width: 76px; height: 3px; background: var(--rust); }
 html.v2l #method-block.about-top .prose { font-size: 17.5px; line-height: 1.58; }
+/* written-out model equations in the About block: predictors bold, coefficients regular */
+html.v2l .eq-panel { margin: 0 0 24px; padding: 16px 26px 12px; background: linear-gradient(180deg, #f1e8d0, #ebe0c4); border: 1px solid #cabb97; border-left: 5px solid var(--rust); border-radius: 6px; }
+html.v2l .eq-hd { margin: 0 0 2px; font: 600 13px var(--sans); letter-spacing: .2em; text-transform: uppercase; color: #46555c; }
+html.v2l .eq-row { display: grid; grid-template-columns: 150px 1fr; gap: 6px 22px; align-items: baseline; padding: 10px 0; border-top: 1px solid #cabb97; }
+html.v2l .eq-hd + .eq-row { border-top: 0; }
+html.v2l .eq-lab { font: 600 12.5px var(--sans); letter-spacing: .2em; text-transform: uppercase; color: var(--rust); }
+html.v2l .eq { font: italic 500 23px/1.65 var(--sans); color: #1d2a2f; min-width: 0; }
+html.v2l .eq sub { font-size: .62em; font-style: normal; vertical-align: -.28em; }
+html.v2l .eq i { font-style: italic; }
+html.v2l .eq .n { font-style: normal; }
+html.v2l .eq .d { color: #1f4f99; font-style: normal; font-weight: 600; }
+html.v2l .eq .rr { color: #a32c27; font-style: normal; font-weight: 600; }
+html.v2l .eq .p { font-weight: 600; font-style: italic; }
+html.v2l .eq .nw { white-space: nowrap; }
+html.v2l .eq-note { margin: 4px 0 0; font: 500 15px/1.4 var(--sans); font-style: normal; color: #46555c; }
+@media (max-width: 760px) {
+  html.v2l .eq-panel { padding: 14px 16px 8px; }
+  html.v2l .eq-row { grid-template-columns: 1fr; gap: 2px; }
+  html.v2l .eq { font-size: 20px; line-height: 1.6; }
+}

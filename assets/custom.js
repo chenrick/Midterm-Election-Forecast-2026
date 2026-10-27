@@ -34,6 +34,7 @@
     richTooltips: true,
     crossHighlight: true,
     /* ---- light layer (v2l): all of these only run when <html class="v2l"> is set (off with ?light=0) ---- */
+    aboutEq: true,    // show the written-out equations at the top of the About block (false = hide)
     aboutTop: true,   // move the "About this model" blurb to the very top of the page (false = leave it at the bottom)
     headline: "Rick Chen - PLSC 2219|Election Forecast",   // text of the big title ("|" marks the line break; set to "" to keep the name from config.js)
     geoMaps: true,             // real district (House) and state (Senate) shapes, with the hexagon / tile maps tucked below
@@ -1296,6 +1297,16 @@
     me.classList.add("about-top");
     var wrap = el("div", "ab-wrap");
     wrap.appendChild(el("h2", "ab-title", "About the model"));
+    if (OPTS.aboutEq) wrap.appendChild(el("div", "eq-panel",
+      "<p class='eq-hd'>The model, written out</p>" +
+      "<div class='eq-row'><div class='eq-lab'>1 &middot; National mood</div><div class='eq'>" +
+      "<span class='d'>Dem</span> national vote <span class='n'>=</span> 100 <span class='n'>&minus;</span> ( <span class='rr'>R</span><sub>2024</sub> <span class='n'>+</span> <span class='n'>&Delta;</span> ), " +
+      "<span class='n'>&Delta;</span> <span class='n'>=</span> &beta;<sub>0</sub> <span class='n'>+</span> &beta;<sub>1</sub>&middot;<span class='p'>Midterm</span> <span class='n'>+</span> &beta;<sub>2</sub>&middot;<span class='p'>Approval</span> <span class='n'>+</span> " +
+      "&beta;<sub>3</sub>&middot;<span class='p'>Gas&nbsp;prices</span> <span class='n'>+</span> &beta;<sub>4</sub>&middot;<span class='p'>Prior&nbsp;share</span></div></div>" +
+      "<div class='eq-row'><div class='eq-lab'>2 &middot; Every race</div><div class='eq'>" +
+      "<span class='d'>Dem</span>&nbsp;share<sub><i>i</i></sub> <span class='n'>=</span> &alpha; <span class='n'>+</span> &beta;<sub>1</sub>&middot;<span class='p'>PVI</span><sub><i>i</i></sub> <span class='n'>+</span> &beta;<sub>2</sub>&middot;<span class='p'>National</span> <span class='n'>+</span> &beta;<sub>3</sub>&middot;<span class='p'>Incumbent</span><sub><i>i</i></sub> <span class='n'>+</span> &beta;<sub>4</sub>&middot;<span class='p'>Last&nbsp;cycle</span><sub><i>i</i></sub> <span class='n'>+</span> " +
+      "<span class='nw'>cap( &gamma;&middot;<span class='p'>Spend&nbsp;gap</span><sub><i>i</i></sub> )</span> <span class='n'>+</span> &epsilon;<sub><i>i</i></sub>" +
+      "<p class='eq-note'>Spending effect capped at &plusmn;2 points (House) and &plusmn;3 points (Senate). The Senate uses its own coefficients, fit on Senate races only.</p></div></div>"));
     var ps = pr.querySelectorAll("p");
     if (ps.length === 3) ["Inputs", "National mood", "Uncertainty"].forEach(function (t, k) { ps[k].insertAdjacentHTML("afterbegin", "<span class='ab-lab'>" + t + "</span>"); });
     wrap.appendChild(pr);
