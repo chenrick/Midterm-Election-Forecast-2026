@@ -1063,6 +1063,9 @@ html.v2l:root {
   --cream: #eee4cb;
   --ink-2: #3c4a51;
   --ink-3: #52606a;
+  --card: #f8f2e2;
+  --paper: #f8f2e2;
+  --paper-2: #f3ebd6;
   --lift-1: 0 1px 0 rgba(255,255,255,.9) inset, 0 1px 2px rgba(48,36,12,.16), 0 12px 26px -12px rgba(48,36,12,.34);
   --lift-2: 0 1px 0 rgba(255,255,255,.9) inset, 0 2px 4px rgba(48,36,12,.14), 0 20px 38px -16px rgba(48,36,12,.42);
 }
@@ -1081,8 +1084,8 @@ html.v2l .v2-nav { background: linear-gradient(180deg, rgba(255,253,247,.97), rg
 html.v2l .stage, html.v2l .card, html.v2l .table-wrap, html.v2l #method-block .prose, html.v2l .topline .card {
   border-color: var(--rule); border-radius: 8px; box-shadow: var(--lift-1);
 }
-html.v2l .stage { background: linear-gradient(180deg, #fffefa 0, #fcf9f1 100%); }
-html.v2l .topline .card { background: linear-gradient(180deg, #fffefb, #fbf8ef); border-top-color: var(--rust); }
+html.v2l .stage { background: linear-gradient(180deg, #faf5e7 0, #f4edd9 100%); }
+html.v2l .topline .card { background: linear-gradient(180deg, #faf5e7, #f4edd9); border-top-color: var(--rust); }
 html.v2l .stage-head, html.v2l .vcard-head, html.v2l .dist2 .card.hist2 h3 {
   background: linear-gradient(180deg, #bf5a26, #a94a1a); box-shadow: 0 1px 0 rgba(255,255,255,.18) inset, 0 -2px 0 rgba(60,20,0,.22) inset;
 }
@@ -1090,25 +1093,20 @@ html.v2l .stage .legend { border-top-color: var(--rule); }
 html.v2l .block-head { border-bottom-color: #bfae86; }
 html.v2l .seg, html.v2l .v2-tool, html.v2l .dl-btn, html.v2l .geo-zoom, html.v2l .geo-tog, html.v2l .chip, html.v2l #search2 { box-shadow: 0 1px 0 rgba(255,255,255,.9) inset, 0 2px 5px -2px rgba(48,36,12,.3); }
 html.v2l .seg button.on, html.v2l .chip.on, html.v2l .geo-tog[aria-pressed="true"], html.v2l .v2-tool:hover { box-shadow: none; }
-html.v2l th { background: #fbf8ef; }
+html.v2l th { background: #f1e9d3; }
 html.v2l #races-table2 tbody tr:nth-child(even) td { background: rgba(226,216,191,.28); }
 html.v2l .site-foot { background: linear-gradient(180deg, #e9dec2, #e2d5b4); box-shadow: 0 14px 30px -14px rgba(40,28,8,.5) inset; }
-html.v2l .geo-wrap { background: radial-gradient(900px 420px at 50% 40%, #fffefb, #f7f2e4 80%); border-radius: 6px; }
+html.v2l .geo-wrap { background: radial-gradient(900px 420px at 50% 40%, #faf5e7, #efe6cf 85%); border-radius: 6px; }
 
 /* ---- About this model: the blurb that opens the page ---- */
 html.v2l #method-block.about-top { margin: 0 0 56px; }
 html.v2l #method-block.about-top .block-head { display: none; }
 html.v2l #method-block.about-top .ab-wrap {
-  position: relative; background: linear-gradient(180deg, #fffefb, #fbf8ef); border: 1px solid var(--rule); border-top: 5px solid var(--rust);
-  border-radius: 8px; box-shadow: var(--lift-2); padding: 28px 36px 10px;
+  position: relative; background: linear-gradient(180deg, #faf5e7, #f4edd9); border: 1px solid var(--rule); border-top: 5px solid var(--rust);
+  border-radius: 8px; box-shadow: var(--lift-2); padding: 30px 38px 12px;
 }
-html.v2l .ab-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 18px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--rule); }
-html.v2l .ab-kick { order: 2; font: 600 12px var(--sans); letter-spacing: .24em; text-transform: uppercase; color: var(--rust); }
-html.v2l .ab-title { order: 1; font: 600 clamp(28px, 3vw, 36px)/1.1 var(--sans); letter-spacing: -.015em; color: var(--ink); margin: 0; }
-html.v2l .ab-by { order: 3; flex-basis: 100%; margin: 4px 0 0; font: 500 14.5px/1.5 var(--sans); color: var(--ink-3); }
-html.v2l #method-block.about-top .prose { background: none; border: 0; box-shadow: none; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 34px; font-size: 16px; line-height: 1.6; }
+html.v2l #method-block.about-top .prose { background: none; border: 0; box-shadow: none; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 34px; font-size: 17.5px; line-height: 1.6; font-weight: 500; }
 html.v2l #method-block.about-top .prose p { margin: 0 0 20px; max-width: none; color: var(--ink); }
-html.v2l #method-block.about-top .prose p strong { font-weight: 600; }
 html.v2l .ab-lab { display: block; margin: 0 0 8px; font: 600 11.5px var(--sans); letter-spacing: .2em; text-transform: uppercase; color: var(--rust); }
 @media (max-width: 980px) {
   html.v2l #method-block.about-top .prose { grid-template-columns: 1fr; }
@@ -1117,6 +1115,95 @@ html.v2l .ab-lab { display: block; margin: 0 0 8px; font: 600 11.5px var(--sans)
 @media (max-width: 760px) {
   html.v2l #method-block.about-top .ab-wrap { padding: 22px 20px 6px; }
   html.v2l #method-block.about-top .prose { font-size: 16.5px; }
+}
+
+/* ---- off-white surfaces everywhere else ---- */
+html.v2l .tip, html.v2l .drawer, html.v2l .dr-race, html.v2l .table-wrap { background: #f8f2e2; }
+html.v2l .hemi circle.d { stroke: #f8f2e2; }
+html.v2l .seg, html.v2l .v2-tool, html.v2l .dl-btn, html.v2l .geo-zoom, html.v2l .geo-tog, html.v2l .chip, html.v2l #search2, html.v2l .dr-btn { background: #fbf6ea; }
+html.v2l .seg button { background: transparent; }
+html.v2l .seg button.on { background: var(--rust); }
+
+/* ---- seat summaries ---- */
+html.v2l .party-line { font: 600 21px/1.3 var(--sans); color: var(--ink); margin-top: 10px; }
+html.v2l .party-line b, html.v2l .hemi-cap b { font-weight: 700; }
+html.v2l b.pd { color: var(--safe-d); } html.v2l b.pr { color: var(--safe-r); }
+html.v2l .topline .card .sub { color: var(--ink); font-weight: 500; font-size: 17px; }
+html.v2l .topline .card .sub[style] { font-size: 15.5px !important; color: var(--ink); font-weight: 500; }
+html.v2l .bar-lab, html.v2l .bar-lab span { color: var(--ink); font-weight: 600; font-size: 14.5px; }
+html.v2l .hemi-cap { display: block; text-align: center; color: var(--ink); margin: 12px 0 0; }
+html.v2l .hemi-cap .hc-pl { display: block; font: 600 min(21px, 4.5vw)/1.25 var(--sans); white-space: nowrap; }
+html.v2l .hemi-cap .hc-win { display: block; font: 500 16px/1.35 var(--sans); margin-top: 3px; }
+@media (min-width: 761px) { html.v2l .hemi-cap { display: none; } }
+
+/* ---- hemicycle centre labels: full words, on every screen size ---- */
+html.v2l .hemi .hc-lab { display: inline; font: 700 11.5px var(--sans); letter-spacing: .2em; text-transform: uppercase; }
+html.v2l .hemi .hc-lab.hc-ld { fill: var(--safe-d); } html.v2l .hemi .hc-lab.hc-lr { fill: var(--safe-r); }
+html.v2l .hemi .hc-lab.hc-small { text-transform: none; letter-spacing: .01em; font-weight: 700; }
+html.v2l .hemi .hc-big { font-weight: 700; }
+html.v2l .hemi .hc-sub { fill: var(--ink); font-weight: 500; }
+
+/* ---- bolder, larger, easier to read ---- */
+html.v2l body { font-size: 18.5px; font-weight: 500; line-height: 1.55; }
+html.v2l .note { font-size: 16.5px; color: var(--ink-2); font-weight: 500; }
+html.v2l .v2-nav a { font: 600 13.5px var(--sans); letter-spacing: .09em; color: var(--ink); padding: 18px 12px 14px; }
+html.v2l .v2-tool { font-weight: 600; font-size: 13px; }
+html.v2l .block-head h2 { font: 700 clamp(34px, 4.2vw, 50px)/1.05 var(--sans); letter-spacing: -.02em; }
+html.v2l .block-head .note { font-size: 18px; color: var(--ink); }
+html.v2l .block-head::before { font-size: 13px; font-weight: 700; }
+html.v2l .stage-head h3, html.v2l .vcard-head h3, html.v2l .dist2 .card.hist2 h3 { font-size: 23px; font-weight: 700; }
+html.v2l .stage-head p { font-size: 16px; font-weight: 500; color: #fff; }
+html.v2l .card .lab { font-size: 14px; font-weight: 700; }
+html.v2l .card .hero { font-weight: 700; font-size: clamp(36px, 3.9vw, 50px); white-space: nowrap; }
+html.v2l .card { background: linear-gradient(180deg, #faf5e7, #f4edd9); }
+html.v2l .lad-row, html.v2l .axis-cap { grid-template-columns: 46px 100px minmax(0, 1fr) 76px; }
+html.v2l .lad-row, html.v2l .rng-row { height: 30px; }
+html.v2l .rng-row, html.v2l .rng-axis { grid-template-columns: 86px minmax(0, 1fr) 142px; }
+html.v2l .rng-row .vl, html.v2l .lad-row .vl { white-space: nowrap; }
+@media (max-width: 760px) {
+  html.v2l .lad-row, html.v2l .axis-cap { grid-template-columns: 40px 84px minmax(0, 1fr) 66px; }
+  html.v2l .rng-row, html.v2l .rng-axis { grid-template-columns: 74px minmax(0, 1fr) 124px; }
+  html.v2l .lad-row .rk, html.v2l .lad-row .vl, html.v2l .rng-row .vl { font-size: 13.5px; }
+}
+html.v2l .axis-cap .cap span, html.v2l .axis-cap span { white-space: nowrap; }
+html.v2l .axis-cap { font-size: 12px; letter-spacing: .08em; }
+@media (max-width: 420px) { html.v2l .card .hero { font-size: 34px; } }
+html.v2l .kpi b { font-weight: 700; font-size: 38px; }
+html.v2l .kpi span, html.v2l .axis-cap, html.v2l .rng-axis { font-size: 12.5px; font-weight: 700; color: var(--ink-2); }
+html.v2l .stage .legend, html.v2l .legend { font: 600 15.5px var(--sans); color: var(--ink); }
+html.v2l .legend .sw { width: 16px; height: 16px; }
+html.v2l .pb-labels { font-size: 15.5px; } html.v2l .pb-labels b { font-size: 18px; font-weight: 700; }
+html.v2l .pb-need { font-size: 17px; } html.v2l .pb-midlab { font-size: 13px; font-weight: 700; }
+html.v2l .lad-row, html.v2l .rng-row { font-size: 16.5px; font-weight: 600; }
+html.v2l .lad-row .rk, html.v2l .lad-row .vl, html.v2l .rng-row .vl { font-size: 15px; font-weight: 600; }
+html.v2l .lad-foot, html.v2l .vcard .note { font-size: 16px; color: var(--ink); }
+html.v2l td { font-size: 16.5px; font-weight: 500; color: var(--ink); }
+html.v2l td .sub { font-size: 14px; color: var(--ink-2); }
+html.v2l th { font-size: 12.5px; font-weight: 700; }
+html.v2l .pill { font-size: 13.5px; font-weight: 700; }
+html.v2l .chip { font-size: 15px; font-weight: 600; }
+html.v2l .prose { font-size: 18.5px; font-weight: 500; }
+html.v2l .tip { font-size: 16px; } html.v2l .tip b { font-size: 20px; font-weight: 700; }
+html.v2l .hist2 .axis text, html.v2l .hist2 .majlab, html.v2l .hist2 .medlab, html.v2l .hist2 .brklab { font-size: 13.5px; font-weight: 600; }
+html.v2l .hist2 .sidelab { font-size: 13.5px; font-weight: 700; }
+html.v2l .hemi .tklab { font-size: 12.5px; font-weight: 600; fill: var(--ink-2); }
+html.v2l .hemi .majlab { font-size: 13.5px; font-weight: 700; }
+html.v2l .geo .lab .la { font-weight: 700; }
+html.v2l .geo-hint { font-size: 15px; color: var(--ink-2); font-weight: 500; }
+html.v2l .site-foot .fine { font-size: 15px; color: var(--ink-2); font-weight: 500; }
+html.v2l .site-foot .links a, html.v2l .foot-data { font-size: 14.5px; }
+html.v2l .dr-top h3 { font-weight: 700; }
+html.v2l .dr-race .t1 b { font-weight: 700; }
+@media (max-width: 420px) {
+  html.v2l .kpi span, html.v2l .axis-cap, html.v2l .rng-axis { font-size: 11px; letter-spacing: .06em; }
+  html.v2l .axis-cap, html.v2l .axis-cap .cap, html.v2l .axis-cap span { white-space: nowrap; font-size: 10px; letter-spacing: .02em; }
+  html.v2l .axis-cap { gap: 2px; }
+}
+@media (max-width: 760px) {
+  html.v2l body { font-size: 17.5px; }
+  html.v2l .block-head h2 { font-size: 36px; }
+  html.v2l td { font-size: 16px; }
+  html.v2l .party-line { font-size: 19px; }
 }
 @media print {
   html.v2l body { background: #fff; background-image: none; }

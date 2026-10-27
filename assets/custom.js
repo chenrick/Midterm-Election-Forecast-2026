@@ -479,7 +479,7 @@
     s += "<line class='maj' x1='" + cx + "' x2='" + cx + "' y1='" + (top + 6) + "' y2='" + (cy - L.inner + L.dot * 0.4).toFixed(1) + "'/>";
     s += "<text class='majlab fit' x='" + cx + "' y='" + (top - 4) + "' text-anchor='middle'>" + esc(opts.majLabel) + "</text>";
     var by = cy - L.inner * 0.30;
-    s += "<text class='hc-kick' x='" + cx + "' y='" + (cy - L.inner * (IS_R ? 0.68 : 0.74)).toFixed(1) + "' text-anchor='middle'>" + esc(opts.kicker) + "</text>";
+    if (!IS_L) s += "<text class='hc-kick' x='" + cx + "' y='" + (cy - L.inner * (IS_R ? 0.68 : 0.74)).toFixed(1) + "' text-anchor='middle'>" + esc(opts.kicker) + "</text>";
     if (IS_R && opts.d != null) {
       var off = Math.min(L.inner * 0.5, 78);
       // size the two big numbers so their outer top corners stay inside the innermost ring of dots
@@ -492,8 +492,8 @@
       s += "<text class='hc-big hc-d'" + fsty + " x='" + (cx - off).toFixed(1) + "' y='" + by.toFixed(1) + "' text-anchor='middle'>" + opts.d + "</text>";
       s += "<text class='hc-dash' x='" + cx + "' y='" + (by - 8).toFixed(1) + "' text-anchor='middle'>&#8212;</text>";
       s += "<text class='hc-big hc-r'" + fsty + " x='" + (cx + off).toFixed(1) + "' y='" + by.toFixed(1) + "' text-anchor='middle'>" + opts.r + "</text>";
-      s += "<text class='hc-lab' x='" + (cx - off).toFixed(1) + "' y='" + (by + 20).toFixed(1) + "' text-anchor='middle'>DEMOCRATIC</text>";
-      s += "<text class='hc-lab' x='" + (cx + off).toFixed(1) + "' y='" + (by + 20).toFixed(1) + "' text-anchor='middle'>REPUBLICAN</text>";
+      s += "<text class='hc-lab hc-ld' x='" + (cx - off).toFixed(1) + "' y='" + (by + 20).toFixed(1) + "' data-by='" + by.toFixed(1) + "' text-anchor='middle'>Democratic</text>";
+      s += "<text class='hc-lab hc-lr' x='" + (cx + off).toFixed(1) + "' y='" + (by + 20).toFixed(1) + "' data-by='" + by.toFixed(1) + "' text-anchor='middle'>Republican</text>";
       (opts.sub2 || []).forEach(function (line, k) {
         s += "<text class='hc-sub' x='" + cx + "' y='" + (by + 46 + k * 17).toFixed(1) + "' text-anchor='middle'>" + esc(line) + "</text>";
       });
@@ -507,7 +507,7 @@
     s += "</svg>";
     var wrap = el("div", "hemi", s);
     wrap.hemiFit = true;
-    if (opts.cap) wrap.appendChild(el("p", "hemi-cap", esc(opts.cap)));   // shown instead of the small centre text on phones
+    if (opts.capD != null) wrap.appendChild(el("p", "hemi-cap", "<span class='hc-pl'>" + partyLine(opts.capD, opts.capR) + "</span>" + (opts.cap ? "<span class='hc-win'>" + esc(opts.cap) + "</span>" : ""))); else if (opts.cap) wrap.appendChild(el("p", "hemi-cap", esc(opts.cap)));   // shown instead of the small centre text on phones
     wrap.querySelectorAll("circle.d").forEach(function (c) {
       var seat = opts.seats[+c.getAttribute("data-i")];
       if (seat.r) { c.setAttribute("tabindex", "-1"); wire(c, seat.r); }
@@ -543,7 +543,7 @@
     st.appendChild(hemicycle({
       seats: rs.map(function (r) { return { r: r }; }), W: IS_R ? 880 : 820, H: IS_R ? 500 : 450, d: hD, r: hR,
       kicker: "PROJECTED SEATS", big: "<tspan class='hc-d'>" + hD + "</tspan><tspan fill='#98a0b0'> &#8211; </tspan><tspan class='hc-r'>" + hR + "</tspan>",
-      sub: "Democratic &#8211; Republican".replace(/&#8211;/, "–"), sub2: sub2, majLabel: "218 = MAJORITY", cap: "Projected: Democratic " + hD + ", Republican " + hR + (sub2.length ? ". " + sub2[0] + "." : "."),
+      sub: "Democratic &#8211; Republican".replace(/&#8211;/, "–"), sub2: sub2, majLabel: "218 = MAJORITY", capD: hD, capR: hR, cap: sub2.length ? sub2[0] + "." : "",
       aria: "House seat chart. Projected Democratic " + hD + ", Republican " + hR + "."
     }));
     st.appendChild(el("div", "legend", ratingLegend()));
@@ -567,7 +567,7 @@
     st.appendChild(hemicycle({
       seats: seats, W: IS_R ? 780 : 700, H: IS_R ? 470 : 410, a: 0.5, d: sD, r: sR,
       kicker: "PROJECTED SEATS", big: "<tspan class='hc-d'>" + sD + "</tspan><tspan fill='#98a0b0'> &#8211; </tspan><tspan class='hc-r'>" + sR + "</tspan>",
-      sub: "Democratic – Republican", sub2: sub2, majLabel: "51 FOR DEMOCRATIC CONTROL", cap: "Projected: Democratic " + sD + ", Republican " + sR + (sub2.length ? ". " + sub2.join(" ") + "." : "."),
+      sub: "Democratic – Republican", sub2: sub2, majLabel: "51 FOR DEMOCRATIC CONTROL", capD: sD, capR: sR, cap: sub2.length ? sub2.join(" ") + "." : "",
       aria: "Senate seat chart. Projected Democratic " + sD + ", Republican " + sR + "."
     }));
     st.appendChild(el("div", "legend", ratingLegend("<span class='key'><i class='sw r-safe-d' style='opacity:.45'></i>Faded: not up in 2026</span>")));
@@ -1081,6 +1081,8 @@
      ===================================================================================== */
   var geo = null, geoMaps = [];
   var OFFSHORE = { VT: [838, 114], NH: [866, 93], MA: [952, 172], RI: [956, 198], CT: [944, 222], NJ: [917, 247], DE: [908, 273], MD: [901, 297] };
+  // Label anchor per state, picked so the two-line label box sits well inside the state shape (solved offline from geo-us.json; overrides centroid + LAB_NUDGE).
+  var LAB_POS = {"FL":[783.2,516.4],"UT":[227.6,272.9],"TN":[673.5,362.3],"AL":[672.6,432.2],"OH":[720.9,257],"TX":[435.9,468.2],"CA":[73.9,296],"LA":[563.8,478.2],"NC":[817.9,350.7],"AK":[106.3,510.5],"AR":[561.6,390.1],"AZ":[208.9,383.5],"CO":[331.4,290],"IA":[539.9,228.4],"ID":[191.6,163.5],"IL":[612,267.3],"IN":[667.4,270.2],"KS":[456.1,309.4],"KY":[702.3,316.1],"ME":[920.9,91.9],"MI":[691.1,201.9],"MN":[518.6,140.9],"MO":[559.3,315.9],"MS":[616.9,434.7],"MT":[286.8,100.6],"ND":[429,104],"NE":[434,239.9],"NM":[311.5,392.4],"NV":[140,243.9],"OK":[471.6,378.2],"OR":[102.4,136],"PA":[805.8,225.6],"SC":[784.2,394.5],"SD":[429.7,172.3],"VA":[810.3,300.8],"WA":[130.2,58.9],"WI":[595.7,161.8],"WV":[762.7,288.7],"WY":[307.7,195.3],"GA":[737.9,428],"NY":[843.9,166.6]};
   var LAB_NUDGE = { MI: [14, 24], FL: [24, -4], LA: [-12, 0], ID: [0, 18], MN: [-4, 10], KY: [12, 2], WV: [-2, 4], NY: [4, 6], ME: [-2, 12], VA: [8, 2], CA: [-6, 0], HI: [0, 0], WA: [0, 0] };
   var LIGHT_TEXT = { "safe-d": 1, "likely-d": 1, "safe-r": 1, "likely-r": 1 };
 
@@ -1162,7 +1164,7 @@
     Object.keys(geo.cen).forEach(function (stt) {
       var c = geo.cen[stt].slice(), nd = LAB_NUDGE[stt], off = OFFSHORE[stt], b = M.byState[stt], rs = b ? (isH ? b.house : b.senate) : [];
       if (isH && !rs.length) return;
-      if (nd) { c[0] += nd[0]; c[1] += nd[1]; }
+      if (LAB_POS[stt] && !off) c = LAB_POS[stt].slice(); else if (nd) { c[0] += nd[0]; c[1] += nd[1]; }
       var x = c[0], y = c[1], cls = "lab", sub = "";
       if (off) { leaders += "<line class='ldr' x1='" + geo.cen[stt][0] + "' y1='" + geo.cen[stt][1] + "' x2='" + (off[0] - (off[0] > geo.cen[stt][0] ? 7 : -7)) + "' y2='" + off[1] + "'/>"; x = off[0]; y = off[1]; cls += " ext"; }
       if (!isH) {
@@ -1293,16 +1295,36 @@
     var me = $("method-block"), content = $("content"), pr = $("method"); if (!me || !content || !pr || me.hidden) return;
     me.classList.add("about-top");
     var wrap = el("div", "ab-wrap");
-    wrap.appendChild(el("div", "ab-head",
-      "<div class='ab-kick'>Read this first</div><h2 class='ab-title'>About this model</h2>" +
-      "<p class='ab-by'>What goes in, how the national mood is set, and how uncertainty is handled.</p>"));
     var ps = pr.querySelectorAll("p");
-    if (ps.length) { var f = ps[0], m = /^(.+?[.!?])(\s|$)/.exec(f.textContent); if (m) f.innerHTML = "<strong>" + esc(m[1]) + "</strong>" + esc(f.textContent.slice(m[1].length)); }
     if (ps.length === 3) ["Inputs", "National mood", "Uncertainty"].forEach(function (t, k) { ps[k].insertAdjacentHTML("afterbegin", "<span class='ab-lab'>" + t + "</span>"); });
     wrap.appendChild(pr);
     me.appendChild(wrap);
     content.insertBefore(me, content.firstChild);
   }
+  /* "Point forecast: D 215, R 220." -> bold, party-coloured "Democratic 215 – Republican 220" */
+  function partyLine(d, r) { return "<b class='pd'>Democratic</b> " + d + " &ndash; <b class='pr'>Republican</b> " + r; }
+  function styleSummaries() {
+    document.querySelectorAll(".topline .sub").forEach(function (p) {
+      var m = /^Point forecast: D (\d+), R (\d+)/.exec(p.textContent);
+      if (m) { p.classList.add("party-line"); p.innerHTML = partyLine(m[1], m[2]); }
+    });
+  }
+  /* centre labels under the two big numbers: full words, sized to stay legible and inside the ring at any width */
+  function fitHemiLabels() {
+    document.querySelectorAll(".hemi svg").forEach(function (svg) {
+      var labs = svg.querySelectorAll("text.hc-lab"); if (!labs.length) return;
+      var vb = svg.viewBox.baseVal, sc = svg.getBoundingClientRect().width / vb.width; if (!sc) return;
+      [].forEach.call(labs, function (t) {
+        var by = parseFloat(t.getAttribute("data-by"));
+        if (sc >= 0.75) { t.removeAttribute("style"); t.setAttribute("y", (by + 20).toFixed(1)); t.classList.remove("hc-small"); return; }
+        var fs = Math.min(24, Math.max(20, 9.2 / sc));
+        t.classList.add("hc-small");
+        t.setAttribute("style", "font-size:" + fs.toFixed(1) + "px");
+        t.setAttribute("y", (by + fs * 0.95 + 4).toFixed(1));
+      });
+    });
+  }
+  window.addEventListener("resize", (function () { var t; return function () { clearTimeout(t); t = setTimeout(fitHemiLabels, 120); }; })());
   function enhance() {
     tip = $("tip");
     if (OPTS.stateDrawer) safe("drawer", buildDrawer);
@@ -1327,6 +1349,8 @@
       });
     });
     if (OPTS.hemicycle) { safe("house hemicycle", buildHouseHemicycle); safe("senate hemicycle", buildSenateHemicycle); }
+    safe("summaries", styleSummaries);
+    safe("hemi labels", fitHemiLabels);
     if (OPTS.betterDistributions) safe("distributions", betterDistributions);
     if (OPTS.decisiveRaces) safe("decisive", buildDecisive);
     if (IS_L && OPTS.flips) safe("flips", buildFlips);
