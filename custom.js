@@ -34,6 +34,7 @@
     richTooltips: true,
     crossHighlight: true,
     /* ---- light layer (v2l): all of these only run when <html class="v2l"> is set (off with ?light=0) ---- */
+    aboutEq: true,    // show the written-out equations at the top of the About block (false = hide)
     aboutTop: true,   // move the "About this model" blurb to the very top of the page (false = leave it at the bottom)
     headline: "Rick Chen - PLSC 2219|Election Forecast",   // text of the big title ("|" marks the line break; set to "" to keep the name from config.js)
     geoMaps: true,             // real district (House) and state (Senate) shapes, with the hexagon / tile maps tucked below
@@ -485,7 +486,7 @@
       // size the two big numbers so their outer top corners stay inside the innermost ring of dots
       var ri = L.inner - L.dot - 26, dig = Math.max(String(opts.d).length, String(opts.r).length), fs = 58;
       for (; fs > 24; fs--) {
-        var hw = dig * 0.64 * fs / 2, dyTop = L.inner * 0.30 + 0.72 * fs;
+        var hw = dig * 0.56 * fs / 2, dyTop = L.inner * 0.30 + 0.72 * fs;
         if (Math.sqrt((off + hw) * (off + hw) + dyTop * dyTop) <= ri) break;
       }
       var fsty = " style='font-size:" + fs + "px'";
@@ -1295,6 +1296,23 @@
     var me = $("method-block"), content = $("content"), pr = $("method"); if (!me || !content || !pr || me.hidden) return;
     me.classList.add("about-top");
     var wrap = el("div", "ab-wrap");
+    wrap.appendChild(el("h2", "ab-title", "About the model"));
+    if (OPTS.aboutEq) wrap.appendChild(el("div", "eq-panel",
+      "<p class='eq-hd'>The model, written out</p>" +
+      "<div class='eq-main'><div class='eq eq-big'>v<sub><i>i,t</i></sub> <span class='n'>=</span> n<sub><i>i</i></sub> <span class='n'>+</span> y<sub><i>t</i></sub> <span class='n'>+</span> d<sub><i>i,t</i></sub> <span class='n'>+</span> &epsilon;<sub><i>i,t</i></sub></div>" +
+      "<p class='eq-words'>vote share = district + national + contest + error</p>" +
+      "<p class='eq-def'><i>v</i><sub><i>i,t</i></sub> is the Democratic share of the two-party vote in race <i>i</i> in year <i>t</i>.</p></div>" +
+      "<div class='eq-row'><div class='eq-lab'>District<span>n<sub><i>i</i></sub></span></div><div class='eq'>" +
+      "n<sub><i>i</i></sub> <span class='n'>=</span> &alpha; <span class='n'>+</span> &beta;<sub>1</sub>&middot;<span class='p'>PVI</span><sub><i>i</i></sub> <span class='n'>+</span> &beta;<sub>2</sub>&middot;<span class='p'>Last&nbsp;cycle</span><sub><i>i</i></sub></div></div>" +
+      "<div class='eq-row'><div class='eq-lab'>National<span>y<sub><i>t</i></sub></span></div><div class='eq'>" +
+      "y<sub><i>t</i></sub> <span class='n'>=</span> &beta;<sub>3</sub>&middot;<span class='p'>National</span><sub><i>t</i></sub>" +
+      "<span class='eq-sub'><span class='p'>National</span><sub><i>t</i></sub> <span class='n'>=</span> 100 <span class='n'>&minus;</span> ( <span class='p'>Prior&nbsp;share</span><sub><i>t</i></sub> <span class='n'>+</span> &Delta;<sub><i>t</i></sub> ), " +
+      "&nbsp;&Delta;<sub><i>t</i></sub> <span class='n'>=</span> &theta;<sub>0</sub> <span class='n'>+</span> &theta;<sub>1</sub>&middot;<span class='p'>Midterm</span> <span class='n'>+</span> &theta;<sub>2</sub>&middot;<span class='p'>Approval</span> <span class='n'>+</span> &theta;<sub>3</sub>&middot;<span class='p'>Gas&nbsp;prices</span> <span class='n'>+</span> &theta;<sub>4</sub>&middot;<span class='p'>Prior&nbsp;share</span><sub><i>t</i></sub></span></div></div>" +
+      "<div class='eq-row'><div class='eq-lab'>Contest<span>d<sub><i>i,t</i></sub></span></div><div class='eq'>" +
+      "d<sub><i>i,t</i></sub> <span class='n'>=</span> &beta;<sub>4</sub>&middot;<span class='p'>Incumbent</span><sub><i>i</i></sub> <span class='n'>+</span> <span class='nw'>cap( &gamma;&middot;<span class='p'>Spend&nbsp;gap</span><sub><i>i</i></sub> )</span></div></div>" +
+      "<div class='eq-row'><div class='eq-lab'>Error<span>&epsilon;<sub><i>i,t</i></sub></span></div><div class='eq eq-plain'>" +
+      "Everything the model leaves out: candidate quality, local issues, scandals." +
+      "<p class='eq-note'>Spending effect capped at &plusmn;2 points (House) and &plusmn;3 points (Senate). The Senate uses its own coefficients, fit on Senate races only.</p></div></div>"));
     var ps = pr.querySelectorAll("p");
     if (ps.length === 3) ["Inputs", "National mood", "Uncertainty"].forEach(function (t, k) { ps[k].insertAdjacentHTML("afterbegin", "<span class='ab-lab'>" + t + "</span>"); });
     wrap.appendChild(pr);
