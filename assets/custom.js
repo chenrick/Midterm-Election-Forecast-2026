@@ -1299,13 +1299,19 @@
     wrap.appendChild(el("h2", "ab-title", "About the model"));
     if (OPTS.aboutEq) wrap.appendChild(el("div", "eq-panel",
       "<p class='eq-hd'>The model, written out</p>" +
-      "<div class='eq-row'><div class='eq-lab'>1 &middot; National mood</div><div class='eq'>" +
-      "<span class='d'>Dem</span> national vote <span class='n'>=</span> 100 <span class='n'>&minus;</span> ( <span class='rr'>R</span><sub>2024</sub> <span class='n'>+</span> <span class='n'>&Delta;</span> ), " +
-      "<span class='n'>&Delta;</span> <span class='n'>=</span> &beta;<sub>0</sub> <span class='n'>+</span> &beta;<sub>1</sub>&middot;<span class='p'>Midterm</span> <span class='n'>+</span> &beta;<sub>2</sub>&middot;<span class='p'>Approval</span> <span class='n'>+</span> " +
-      "&beta;<sub>3</sub>&middot;<span class='p'>Gas&nbsp;prices</span> <span class='n'>+</span> &beta;<sub>4</sub>&middot;<span class='p'>Prior&nbsp;share</span></div></div>" +
-      "<div class='eq-row'><div class='eq-lab'>2 &middot; Every race</div><div class='eq'>" +
-      "<span class='d'>Dem</span>&nbsp;share<sub><i>i</i></sub> <span class='n'>=</span> &alpha; <span class='n'>+</span> &beta;<sub>1</sub>&middot;<span class='p'>PVI</span><sub><i>i</i></sub> <span class='n'>+</span> &beta;<sub>2</sub>&middot;<span class='p'>National</span> <span class='n'>+</span> &beta;<sub>3</sub>&middot;<span class='p'>Incumbent</span><sub><i>i</i></sub> <span class='n'>+</span> &beta;<sub>4</sub>&middot;<span class='p'>Last&nbsp;cycle</span><sub><i>i</i></sub> <span class='n'>+</span> " +
-      "<span class='nw'>cap( &gamma;&middot;<span class='p'>Spend&nbsp;gap</span><sub><i>i</i></sub> )</span> <span class='n'>+</span> &epsilon;<sub><i>i</i></sub>" +
+      "<div class='eq-main'><div class='eq eq-big'>v<sub><i>i,t</i></sub> <span class='n'>=</span> n<sub><i>i</i></sub> <span class='n'>+</span> y<sub><i>t</i></sub> <span class='n'>+</span> d<sub><i>i,t</i></sub> <span class='n'>+</span> &epsilon;<sub><i>i,t</i></sub></div>" +
+      "<p class='eq-words'>vote share = district + national + contest + error</p>" +
+      "<p class='eq-def'><i>v</i><sub><i>i,t</i></sub> is the Democratic share of the two-party vote in race <i>i</i> in year <i>t</i>.</p></div>" +
+      "<div class='eq-row'><div class='eq-lab'>District<span>n<sub><i>i</i></sub></span></div><div class='eq'>" +
+      "n<sub><i>i</i></sub> <span class='n'>=</span> &alpha; <span class='n'>+</span> &beta;<sub>1</sub>&middot;<span class='p'>PVI</span><sub><i>i</i></sub> <span class='n'>+</span> &beta;<sub>2</sub>&middot;<span class='p'>Last&nbsp;cycle</span><sub><i>i</i></sub></div></div>" +
+      "<div class='eq-row'><div class='eq-lab'>National<span>y<sub><i>t</i></sub></span></div><div class='eq'>" +
+      "y<sub><i>t</i></sub> <span class='n'>=</span> &beta;<sub>3</sub>&middot;<span class='p'>National</span><sub><i>t</i></sub>" +
+      "<span class='eq-sub'><span class='p'>National</span><sub><i>t</i></sub> <span class='n'>=</span> 100 <span class='n'>&minus;</span> ( <span class='p'>Prior&nbsp;share</span><sub><i>t</i></sub> <span class='n'>+</span> &Delta;<sub><i>t</i></sub> ), " +
+      "&nbsp;&Delta;<sub><i>t</i></sub> <span class='n'>=</span> &theta;<sub>0</sub> <span class='n'>+</span> &theta;<sub>1</sub>&middot;<span class='p'>Midterm</span> <span class='n'>+</span> &theta;<sub>2</sub>&middot;<span class='p'>Approval</span> <span class='n'>+</span> &theta;<sub>3</sub>&middot;<span class='p'>Gas&nbsp;prices</span> <span class='n'>+</span> &theta;<sub>4</sub>&middot;<span class='p'>Prior&nbsp;share</span><sub><i>t</i></sub></span></div></div>" +
+      "<div class='eq-row'><div class='eq-lab'>Contest<span>d<sub><i>i,t</i></sub></span></div><div class='eq'>" +
+      "d<sub><i>i,t</i></sub> <span class='n'>=</span> &beta;<sub>4</sub>&middot;<span class='p'>Incumbent</span><sub><i>i</i></sub> <span class='n'>+</span> <span class='nw'>cap( &gamma;&middot;<span class='p'>Spend&nbsp;gap</span><sub><i>i</i></sub> )</span></div></div>" +
+      "<div class='eq-row'><div class='eq-lab'>Error<span>&epsilon;<sub><i>i,t</i></sub></span></div><div class='eq eq-plain'>" +
+      "Everything the model leaves out: candidate quality, local issues, scandals." +
       "<p class='eq-note'>Spending effect capped at &plusmn;2 points (House) and &plusmn;3 points (Senate). The Senate uses its own coefficients, fit on Senate races only.</p></div></div>"));
     var ps = pr.querySelectorAll("p");
     if (ps.length === 3) ["Inputs", "National mood", "Uncertainty"].forEach(function (t, k) { ps[k].insertAdjacentHTML("afterbegin", "<span class='ab-lab'>" + t + "</span>"); });
